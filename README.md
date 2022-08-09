@@ -13,8 +13,7 @@ These codes are grouped into the following categories:
 
 * Shared utilities:
 
-  * newton.py : module that implements a modified Newton iteration.  This should include parameters: lagging (could equal 0 for a full Newton method), and linear algebra type (dense, sparse, preconditioned GMRES)
-  * time_loop.py : module that calls a specific time stepper repeatedly to evolve a calculation over a time interval, using a call structure similar to Python's built-in adaptive solvers (but with tolerances replaced by desired time step size)
+  * implicit_solver.py : module that defines an "ImplicitSolver" class, whose objects implement a modified Newton iteration with either dense, sparse, GMRES, or preconditioned GMRES inner linear solver.
 
 * Simple time-steppers:
 
