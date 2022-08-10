@@ -1,28 +1,37 @@
-# backward_euler.py
+# implicit_lmm.py
 #
 # Daniel R. Reynolds
 # Department of Mathematics
 # Southern Methodist University
 from implicit_solver import ImplicitSolver
 
-def backward_euler(f, tspan, ycur, h, solver):
+def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     """
-    Usage: t, y, success = backward_euler(f, tspan, y0, h, solver)
+    Usage: t, y, success = explicit_lmm(f, tspan, y0, h, alpha, beta, solver)
 
     Time-stepping function with syntax similar to
-    scipy.integrate.solve_ivp, and that uses the backward Euler
-    (a.k.a., implicit Euler) method for computing each internal
-    step, for an ODE IVP of the form
+    scipy.integrate.solve_ivp, and that uses an implicit linear
+    multistep method of the form
+       \sum_{j=0}^{k-1} \alpha_j y_{n+1-j} = h\sum_{j=0}^{k-1} \beta_j f_{n+1-j},
+    for computing each internal step, for an ODE IVP of the form
        y' = f(t,y), t in tspan,
        y(t0) = y0.
 
-    Inputs:  f      = function for ODE right-hand side, f(t,y)
-             tspan  = times at which to store the computed solution
-                      (must be sorted, and each must occur naturally in
-                      the set tspan[0], tspan[0]+h, tspan[0]+2h , ...
-                      [nd-array, shape(n_out)]
-             y0     = initial condition [nd-array, shape(n)]
-             h      = internal time step to use [float]
+    Note: this requires that y0 has separate columns containing
+    sufficiently accurate "initial" values for all previous LMM steps.
+
+    Inputs:  f     = function for ODE right-hand side, f(t,y)
+             tspan = times at which to store the computed solution
+                     (must be sorted, and each must occur naturally in
+                     the set tspan[0], tspan[0]+h, tspan[0]+2h , ...
+                     [nd-array, shape(n_out)]
+             y0    = initial condition [nd-array, shape(n,k-1)], sorted as
+                     [y0(t0-(k-2)*h), ... y0(t0-h), y0(t0)]
+             h     = internal time step to use [float]
+             alpha = linear multistep coefficients, sorted as
+                     [\alpha_0, \alpha_1, ... \alpha_{k-1}] [nd-array, shape(k)]
+             beta  = linear multistep coefficients, sorted as
+                     [\beta_0, \beta_1, ... \beta_{k-1}]  [nd-array, shape(k)]
              solver = algebraic solver object to use
                       [ImplicitSolver, see implicit_solver.py]
 
@@ -39,11 +48,30 @@ def backward_euler(f, tspan, ycur, h, solver):
         if (abs(int(hn/h) - (hn/h)) > np.sqrt(np.finfo(h).eps)*abs(h)):
             raise InputError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
 
+    # verify that input LMM coefficients are valid
+    k = alpha.size
+    if (abs(alpha[0]) == 0):
+        raise InputError("LMM coefficient must have nonzero alpha[0], ",
+                         alpha[0], " was input")
+    if (beta.size != k):
+        raise InputError("LMM coefficient arrays must be the same length,",
+                         beta.size, " != ", k)
+    if (np.shape(y0)[0] < (k-1)):
+        raise InputError("insufficient initial conditions provided, ",
+                         np.shape(y0)[0], " < ", alpha.size-1)
+
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
     y = np.zeros(ycur.size,tspan.size)
     t[0] = tspan[0]
-    y[0,:] = ycur
+    y[0,:] = y0[-1,:]
+
+    # initialize internal data
+    fprev = []
+    yprev = []
+    for i in range(k-1):
+        yprev.append(y0[i,:])
+        fprev.append(f(tspan[0]-(k-2-i)*h, y0[i,:]))
 
     # loop over desired output times
     for iout in range(1,tspan.size):
@@ -57,17 +85,26 @@ def backward_euler(f, tspan, ycur, h, solver):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # update tcur for this step
+            # create LMM residual and Jacobia solver for this step
             tcur += h
+            data = (h*beta[1]/alpha[0])*fprev[-1] - (alpha[1]/alpha[0])*yprev[-1]
+            for i in range(2,k):
+                data += (h*beta[i]/alpha[0])*fprev[-i] - (alpha[i]/alpha[0])*yprev[-i]
 
             # create implicit residual and Jacobian solver for this step
-            F = lambda ynew: ynew - ycur - h*f(tcur,ycur)
-            solver.setup_linear_solver(tcur, h)
+            F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(tcur,ycur)
+            solver.setup_linear_solver(tcur, h*beta[0]/alpha[0])
 
             # perform implicit solve, and return on solver failure
-            ycur, iters, success = solver.solve(F, ycur)
+            ycur, iters, success = solver.solve(F, yprev[-1])
             if (not success):
                 return [t, y, False]
+
+            # add current solution and RHS to queue, and remove oldest solution and RHS
+            yprev.pop(0)
+            yprev.append(ycur)
+            fprev.pop(0)
+            fprev.append(f(tcur,ycur))
 
         # store current results in output arrays
         t[iout] = tcur
