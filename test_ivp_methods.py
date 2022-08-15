@@ -28,12 +28,12 @@
 
 import numpy as np
 from forward_euler import *
+from erk import *
 from scipy.integrate import solve_ivp
 
 # problem time interval and parameters
 t0 = 0.0
-#tf = 2.5*np.pi
-tf = 2.5*np.pi/100
+tf = 2.5*np.pi
 alpha = 1.0
 omega = 20.0
 epsilon = 0.1
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # forward Euler tests
     print("forward Euler tests:")
-    hvals = (tf-t0)/Nout/np.array([1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0], dtype=float)
+    hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
         y0 = ytrue(t0)
@@ -109,4 +109,90 @@ if __name__ == "__main__":
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
                       (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
-#
+    # ERK tests
+    print("ERK-2 tests:")
+    kappa = 0.5
+    A = np.array([[0, 0], [0.5/kappa, 0]], dtype=float)
+    b = np.array([1-kappa, kappa], dtype=float)
+    c = np.array([0, 0.5/kappa], dtype=float)
+    hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+    errs = np.ones(hvals.size)
+    for ih in range(hvals.size):
+        y0 = ytrue(t0)
+        t, y, success = erk(f, tspan, y0, hvals[ih], A, b, c)
+        if (not success):
+            print("  failure with h =", hvals[ih])
+        else:
+            errs[ih] = np.linalg.norm(y-yref,1)
+            if (ih == 0):
+                print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
+            else:
+                print("  h = %.12e,  error = %.12e,  rate = %.3f" %
+                      (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
+
+    print("ERK-3 tests:")
+    alpha = 0.5
+    A = np.array([[0, 0, 0], [2.0/3.0, 0, 0], [2.0/3.0-0.25/alpha, 0.25/alpha, 0]], dtype=float)
+    b = np.array([0.25, 0.75-alpha, alpha], dtype=float)
+    c = np.array([0, 2.0/3.0, 2.0/3.0], dtype=float)
+    hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128, 256], dtype=float)
+    errs = np.ones(hvals.size)
+    for ih in range(hvals.size):
+        y0 = ytrue(t0)
+        t, y, success = erk(f, tspan, y0, hvals[ih], A, b, c)
+        if (not success):
+            print("  failure with h =", hvals[ih])
+        else:
+            errs[ih] = np.linalg.norm(y-yref,1)
+            if (ih == 0):
+                print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
+            else:
+                print("  h = %.12e,  error = %.12e,  rate = %.3f" %
+                      (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
+
+    print("ERK-4 tests:")
+    A = np.array([[0, 0, 0, 0], [0.5, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 1, 0]], dtype=float)
+    b = np.array([1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0], dtype=float)
+    c = np.array([0, 0.5, 0.5, 1], dtype=float)
+    hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128, 256], dtype=float)
+    errs = np.ones(hvals.size)
+    for ih in range(hvals.size):
+        y0 = ytrue(t0)
+        t, y, success = erk(f, tspan, y0, hvals[ih], A, b, c)
+        if (not success):
+            print("  failure with h =", hvals[ih])
+        else:
+            errs[ih] = np.linalg.norm(y-yref,1)
+            if (ih == 0):
+                print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
+            else:
+                print("  h = %.12e,  error = %.12e,  rate = %.3f" %
+                      (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
+
+    # Explicit LMM tests
+
+
+
+
+    # construct implicit solvers
+
+
+    # DIRK tests
+    print("DIRK-3 dense tests:")
+
+    print("DIRK-3 sparse tests:")
+
+    print("DIRK-3 gmres tests:")
+
+    print("DIRK-4 dense tests:")
+
+    print("DIRK-4 sparse tests:")
+
+    print("DIRK-4 gmres tests:")
+
+
+    print("DIRK-5 dense tests:")
+
+    print("DIRK-5 sparse tests:")
+
+    print("DIRK-5 gmres tests:")
