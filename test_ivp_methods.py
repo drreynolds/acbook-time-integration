@@ -32,7 +32,8 @@ from scipy.integrate import solve_ivp
 
 # problem time interval and parameters
 t0 = 0.0
-tf = 2.5*np.pi
+#tf = 2.5*np.pi
+tf = 2.5*np.pi/100
 alpha = 1.0
 omega = 20.0
 epsilon = 0.1
@@ -82,12 +83,12 @@ tspan = np.linspace(t0, tf, Nout+1)
 yref = np.zeros((Nout+1, 2), dtype=float)
 for i in range(Nout+1):
     yref[i,:] = ytrue(tspan[i])
-y0 = ytrue(t0)
 
 # run tests if this file is called as main
 if __name__ == "__main__":
 
     # reference solution test
+    y0 = ytrue(t0)
     ivpsol = solve_ivp(f, (t0,tf), y0, t_eval=tspan, rtol=1e-8)
     print("ivp_sol error =", np.linalg.norm(np.transpose(ivpsol.y)-yref,1))
 
@@ -96,14 +97,16 @@ if __name__ == "__main__":
     hvals = (tf-t0)/Nout/np.array([1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
+        y0 = ytrue(t0)
         t, y, success = forward_euler(f, tspan, y0, hvals[ih])
         if (not success):
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-yref,1)
             if (ih == 0):
-                print("  h =", hvals[ih], "  error =", errs[ih])
+                print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
-                print("  h =", hvals[ih], "  error =", errs[ih], "  rate =", np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1]))
+                print("  h = %.12e,  error = %.12e,  rate = %.3f" %
+                      (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
 #

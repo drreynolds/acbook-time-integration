@@ -33,7 +33,7 @@ def forward_euler(f, tspan, ycur, h):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > np.sqrt(np.finfo(h).eps)*abs(h)):
+        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
             raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
 
     # initialize outputs, and set first entry corresponding to initial condition
@@ -46,7 +46,7 @@ def forward_euler(f, tspan, ycur, h):
     for iout in range(1,tspan.size):
 
         # determine how many internal steps are required
-        N = int((tspan[iout]-tspan[iout-1])/h)
+        N = round((tspan[iout]-tspan[iout-1])/h)
 
         # reset "current" t that will be evolved internally
         tcur = tspan[iout-1]
