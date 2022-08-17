@@ -39,30 +39,33 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(int(hn/h) - (hn/h)) > np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise InputError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
+        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
 
     # verify that Butcher table has appropriate structure
     if (np.linalg.norm(np.triu(A,1)) > 10*np.finfo(float).eps):
-        raise InputError("input Butcher table must be lower-triangular, A =", A)
+        raise ValueError("input Butcher table must be lower-triangular, A =", A)
     if (np.shape(A)[0] != np.shape(A)[1]):
-        raise InputError("input Butcher table must be square, A =", A)
+        raise ValueError("input Butcher table must be square, A =", A)
     if (np.shape(A)[0] != b.size):
-        raise InputError("incompatible Butcher table inputs, A =", A, ", b =", b)
+        raise ValueError("incompatible Butcher table inputs, A =", A, ", b =", b)
     if (b.size != c.size):
-        raise InputError("incompatible Butcher table inputs, b =", b, ", c =", c)
+        raise ValueError("incompatible Butcher table inputs, b =", b, ", c =", c)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros(ycur.size,tspan.size)
+    y = np.zeros((tspan.size,ycur.size))
     t[0] = tspan[0]
     y[0,:] = ycur
+
+    # initialize internal data
+    k = np.zeros((b.size,ycur.size))
 
     # loop over desired output times
     for iout in range(1,tspan.size):
 
         # determine how many internal steps are required
-        N = int((tspan[iout]-tspan[iout-1])/h)
+        N = round((tspan[iout]-tspan[iout-1])/h)
 
         # reset "current" t that will be evolved internally
         tcur = tspan[iout-1]
@@ -74,13 +77,13 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
             for istage in range(c.size):
 
                 # construct "data" for this stage solve
-                data = ycur
+                data = np.copy(ycur)
                 for jstage in range(istage):
                     data += h*A[istage,jstage]*k[jstage,:]
 
                 # construct implicit residual and Jacobian solver for this stage
                 tstage = tcur+h*c[istage]
-                F = zcur: zcur - data - h*A[istage,istage]*f(tstage,zcur)
+                F = lambda zcur: zcur - data - h*A[istage,istage]*f(tstage,zcur)
                 solver.setup_linear_solver(tstage, h*A[istage,istage])
 
                 # perform implicit solve, and return on solver failure

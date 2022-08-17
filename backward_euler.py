@@ -36,12 +36,12 @@ def backward_euler(f, tspan, ycur, h, solver):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(int(hn/h) - (hn/h)) > np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise InputError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
+        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros(ycur.size,tspan.size)
+    y = np.zeros((tspan.size,ycur.size))
     t[0] = tspan[0]
     y[0,:] = ycur
 
@@ -49,7 +49,7 @@ def backward_euler(f, tspan, ycur, h, solver):
     for iout in range(1,tspan.size):
 
         # determine how many internal steps are required
-        N = int((tspan[iout]-tspan[iout-1])/h)
+        N = round((tspan[iout]-tspan[iout-1])/h)
 
         # reset "current" t that will be evolved internally
         tcur = tspan[iout-1]
@@ -61,12 +61,14 @@ def backward_euler(f, tspan, ycur, h, solver):
             tcur += h
 
             # create implicit residual and Jacobian solver for this step
-            F = lambda ynew: ynew - ycur - h*f(tcur,ycur)
+            F = lambda ynew: ynew - ycur - h*f(tcur,ynew)
             solver.setup_linear_solver(tcur, h)
 
             # perform implicit solve, and return on solver failure
             ycur, iters, success = solver.solve(F, ycur)
             if (not success):
+                print("backward_euler warning: solver failure in computing output %i, at step %i, t = %f (iters = %i)" %
+                      (iout, n, tcur, iters))
                 return [t, y, False]
 
         # store current results in output arrays

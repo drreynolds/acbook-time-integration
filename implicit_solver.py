@@ -29,24 +29,24 @@ class ImplicitSolver:
         Jfreq    = frequency for reconstructing Jacobian solver (i.e., f_y is called every
                    Jfreq iterations)
     """
-    def __init__(implicit_solver, f_y, solver_type, p_setup=0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
+    def __init__(self, f_y, solver_type, p_setup=0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
         # required inputs
-        implicit_solver.fy = f_y
-        implicit_solver.solver_type = solver_type
+        self.f_y = f_y
+        self.solver_type = solver_type
         # optional inputs
-        implicit_solver.prec = p_setup
-        implicit_solver.maxiter = maxiter
-        implicit_solver.rtol = rtol
-        implicit_solver.atol = atol
-        implicit_solver.Jfreq = Jfreq
+        self.prec = p_setup
+        self.maxiter = maxiter
+        self.rtol = rtol
+        self.atol = atol
+        self.Jfreq = Jfreq
         # internal data
-        implicit_solver.linear_solver = 0
-        implicit_solver.total_iters = 0
-        implicit_solver.total_setups = 0
+        self.linear_solver = 0
+        self.total_iters = 0
+        self.total_setups = 0
         if ((solver_type != 'dense') and (solver_type != 'sparse') and (solver_type != 'gmres') and (solver_type != 'pgmres')):
             raise ValueError("Illegal solver_type input, must be one of dense/sparse/gmres/pgmres")
 
-    def setup_linear_solver(t, gamma):
+    def setup_linear_solver(self, t, gamma):
         """
         Creates a function that newton() will call to construct
         scipy.sparse.linalg.LinearOperator objects as needed during the course
@@ -59,10 +59,11 @@ class ImplicitSolver:
         from scipy.sparse import identity
         from scipy.sparse.linalg import LinearOperator
         from scipy.sparse.linalg import gmres
+        from scipy.sparse.linalg import factorized
 
         if (self.solver_type == 'dense'):
             def J(y,rtol,abstol):
-                Jac = np.eye(y.size) + gamma*f_y(t,y)
+                Jac = np.eye(y.size) + gamma*self.f_y(t,y)
                 try:
                     lu, piv = lu_factor(Jac)
                 except:
@@ -71,7 +72,7 @@ class ImplicitSolver:
                 return LinearOperator((y.size,y.size), matvec=Jsolve)
         elif (self.solver_type == 'sparse'):
             def J(y,rtol,abstol):
-                Jac = identity(y.size) + gamma*f_y(t,y)
+                Jac = identity(y.size) + gamma*self.f_y(t,y)
                 try:
                     Jfactored = factorized(Jac)
                 except:
@@ -80,20 +81,20 @@ class ImplicitSolver:
                 return LinearOperator((y.size,y.size), matvec=Jsolve)
         elif (self.solver_type == 'gmres'):
             def J(y,rtol,abstol):
-                Jv = lambda v: v + gamma*f_y_times(t,y,v)
-                J = LinearOperator((x.size,x.size), matvec=Jv)
+                Jv = lambda v: v + gamma*self.f_y(t,y,v)
+                J = LinearOperator((y.size,y.size), matvec=Jv)
                 Jsolve = lambda b: gmres(J, b, tol=rtol, atol=abstol)[0]
-                return LinearOperator((x.size,x.size), matvec=Jsolve)
+                return LinearOperator((y.size,y.size), matvec=Jsolve)
         elif (self.solver_type == 'pgmres'):
             def J(y,rtol,abstol):
                 P = P_setup_fcn(t,y,gamma,rtol,abstol)
-                Jv = lambda v: v + gamma*f_y_times(t,y,v)
-                J = LinearOperator((x.size,x.size), matvec=Jv)
+                Jv = lambda v: v + gamma*self.f_y(t,y,v)
+                J = LinearOperator((y.size,y.size), matvec=Jv)
                 Jsolve = lambda b: gmres(J, b, tol=rtol, atol=abstol, M=P)[0]
-                return LinearOperator((x.size,x.size), matvec=Jsolve)
+                return LinearOperator((y.size,y.size), matvec=Jsolve)
         self.linear_solver = J
 
-    def solve(Ffcn, y0):
+    def solve(self, Ffcn, y0):
         """
         Implements a modified Newton-Raphson method for approximating a root of the
         nonlinear system of equations F(y)=0.  Here y is a numpy array with n entries,
@@ -117,13 +118,13 @@ class ImplicitSolver:
         assert self.linear_solver != 0, "linear_solver has not been set up"
 
         # set scalar-valued absolute tolerance for linear solver
-        if (np.isscalar(atol)):
-            abstol = atol
+        if (np.isscalar(self.atol)):
+            abstol = self.atol
         else:
-            abstol = np.average(atol)
+            abstol = np.average(self.atol)
 
         # initialize outputs
-        y = y0
+        y = np.copy(y0)
         iters = 0
         success = False
 
@@ -134,11 +135,11 @@ class ImplicitSolver:
         F = Ffcn(y)
 
         # set up initial Jacobian solver
-        Jsolver = self.linear_solver(y, rtol, abstol)
+        Jsolver = self.linear_solver(y, self.rtol, abstol)
         self.total_setups += 1
 
         # perform iteration
-        for its in range(1,maxiter+1):
+        for its in range(1,self.maxiter+1):
 
             # increment iteration counter
             iters += 1
@@ -151,7 +152,7 @@ class ImplicitSolver:
             y -= h
 
             # check for convergence
-            if (np.linalg.norm(h / (atol + rtol*np.abs(y)))/np.sqrt(n) < 1):
+            if (np.linalg.norm(h / (self.atol + self.rtol*np.abs(y)))/np.sqrt(n) < 1):
                 success = True
                 return [y, iters, success]
 
@@ -159,17 +160,22 @@ class ImplicitSolver:
             F = Ffcn(y)
 
             # update Jacobian every "Jfreq" iterations
-            if (its % Jfreq == 0):
-                Jsolver = self.linear_solver(y, rtol, abstol)
+            if (its % self.Jfreq == 0):
+                Jsolver = self.linear_solver(y, self.rtol, abstol)
                 self.total_setups += 1
 
         # if we made it here, return with current solution (note that success is still False)
         return [y, iters, success]
 
-    def get_total_iters():
+    def get_total_iters(self):
         """ Returns the total number of nonlinear solver iterations over the life of the solver """
         return self.total_iters
 
-    def get_total_setups():
+    def get_total_setups(self):
         """ Returns the total number of linear solver setup calls over the life of the solver """
         return self.total_setups
+
+    def reset(self):
+        """ Resets the solver statistics """
+        self.total_iters = 0
+        self.total_setups = 0

@@ -24,7 +24,7 @@ def explicit_lmm(f, tspan, y0, h, alpha, beta):
                      (must be sorted, and each must occur naturally in
                      the set tspan[0], tspan[0]+h, tspan[0]+2h , ...
                      [nd-array, shape(n_out)]
-             y0    = initial condition [nd-array, shape(n,k-1)], sorted as
+             y0    = initial condition [nd-array, shape(k-1,n)], sorted as
                      [y0(t0-(k-2)*h), ... y0(t0-h), y0(t0)]
              h     = internal time step to use [float]
              alpha = linear multistep coefficients, sorted as
@@ -42,27 +42,27 @@ def explicit_lmm(f, tspan, y0, h, alpha, beta):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(int(hn/h) - (hn/h)) > np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise InputError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
+        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
 
     # verify that input LMM coefficients are valid
     k = alpha.size
     if (abs(alpha[0]) == 0):
-        raise InputError("LMM coefficient must have nonzero alpha[0], ",
+        raise ValueError("LMM coefficient must have nonzero alpha[0], ",
                          alpha[0], " was input")
     if (abs(beta[0]) > 10*np.finfo(float).eps):
-        raise InputError("only explicit LMMs supported, beta[0] =", beta[0],
+        raise ValueError("only explicit LMMs supported, beta[0] =", beta[0],
                          " (should be 0)")
     if (beta.size != k):
-        raise InputError("LMM coefficient arrays must be the same length,",
+        raise ValueError("LMM coefficient arrays must be the same length,",
                          beta.size, " != ", k)
     if (np.shape(y0)[0] < (k-1)):
-        raise InputError("insufficient initial conditions provided, ",
+        raise ValueError("insufficient initial conditions provided, ",
                          np.shape(y0)[0], " < ", alpha.size-1)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros(ycur.size,tspan.size)
+    y = np.zeros((tspan.size,y0.shape[1]))
     t[0] = tspan[0]
     y[0,:] = y0[-1,:]
 

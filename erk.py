@@ -40,13 +40,13 @@ def erk(f, tspan, ycur, h, A, b, c):
 
     # verify that Butcher table has appropriate structure
     if (np.linalg.norm(np.triu(A)) > 10*np.finfo(float).eps):
-        raise InputError("input Butcher table must be strictly lower-triangular, A =", A)
+        raise ValueError("input Butcher table must be strictly lower-triangular, A =", A)
     if (np.shape(A)[0] != np.shape(A)[1]):
-        raise InputError("input Butcher table must be square, A =", A)
+        raise ValueError("input Butcher table must be square, A =", A)
     if (np.shape(A)[0] != b.size):
-        raise InputError("incompatible Butcher table inputs, A =", A, ", b =", b)
+        raise ValueError("incompatible Butcher table inputs, A =", A, ", b =", b)
     if (b.size != c.size):
-        raise InputError("incompatible Butcher table inputs, b =", b, ", c =", c)
+        raise ValueError("incompatible Butcher table inputs, b =", b, ", c =", c)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
