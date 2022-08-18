@@ -91,11 +91,11 @@ for i in range(Nout+1):
     yref[i,:] = ytrue(tspan[i])
 
 # flags to enable/disable classes of tests
-test_fwd_euler = True
-test_bwd_euler = False# True
+test_fwd_euler = False# True
+test_bwd_euler = True
 test_erk = False# True
-test_explicit_lmm = True
-test_implicit_lmm = False# True
+test_explicit_lmm = False# True
+test_implicit_lmm = True
 test_dirk = False# True
 
 # run tests if this file is called as main
@@ -214,9 +214,9 @@ if __name__ == "__main__":
                           (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
         print("ERK-3 tests:")
-        alpha = 0.5
-        A = np.array([[0, 0, 0], [2.0/3.0, 0, 0], [2.0/3.0-0.25/alpha, 0.25/alpha, 0]], dtype=float)
-        b = np.array([0.25, 0.75-alpha, alpha], dtype=float)
+        delta = 0.5
+        A = np.array([[0, 0, 0], [2.0/3.0, 0, 0], [2.0/3.0-0.25/delta, 0.25/delta, 0]], dtype=float)
+        b = np.array([0.25, 0.75-delta, delta], dtype=float)
         c = np.array([0, 2.0/3.0, 2.0/3.0], dtype=float)
         hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128, 256], dtype=float)
         errs = np.ones(hvals.size)
@@ -255,13 +255,13 @@ if __name__ == "__main__":
     if (test_explicit_lmm):
         # Explicit LMM tests
         print("AB-1 tests:")
-        alpha = np.array([1, -1], dtype=float)
-        beta = np.array([0, 1], dtype=float)
+        alphas = np.array([1, -1], dtype=float)
+        betas = np.array([0, 1], dtype=float)
         hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
-            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alpha, beta)
+            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alphas, betas)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -273,13 +273,13 @@ if __name__ == "__main__":
                           (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
         print("AB-2 tests:")
-        alpha = np.array([1, -1, 0], dtype=float)
-        beta = np.array([0, 1.5, -0.5], dtype=float)
+        alphas = np.array([1, -1, 0], dtype=float)
+        betas = np.array([0, 1.5, -0.5], dtype=float)
         hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alpha, beta)
+            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alphas, betas)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -291,13 +291,13 @@ if __name__ == "__main__":
                           (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
         print("AB-3 tests:")
-        alpha = np.array([1, -1, 0, 0], dtype=float)
-        beta = np.array([0, 23.0/12.0, -16.0/12.0, 5.0/12.0], dtype=float)
+        alphas = np.array([1, -1, 0, 0], dtype=float)
+        betas = np.array([0, 23.0/12.0, -16.0/12.0, 5.0/12.0], dtype=float)
         hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alpha, beta)
+            t, y, success = explicit_lmm(f, tspan, y0, hvals[ih], alphas, betas)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -312,13 +312,13 @@ if __name__ == "__main__":
     if (test_implicit_lmm):
         # Implicit LMM tests
         print("BDF-1 dense tests:")
-        alpha = np.array([1, -1], dtype=float)
-        beta = np.array([1, 0], dtype=float)
+        alphas = np.array([1, -1], dtype=float)
+        betas = np.array([1, 0], dtype=float)
         hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, dense_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, dense_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -337,7 +337,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, sparse_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, sparse_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -356,7 +356,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, gmres_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, gmres_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -372,13 +372,13 @@ if __name__ == "__main__":
             gmres_solver.reset()
 
         print("BDF-2 dense tests:")
-        alpha = np.array([1, -4.0/3.0, 1.0/3.0], dtype=float)
-        beta = np.array([2.0/3.0, 0, 0], dtype=float)
+        alphas = np.array([1, -4.0/3.0, 1.0/3.0], dtype=float)
+        betas = np.array([2.0/3.0, 0, 0], dtype=float)
         hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, dense_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, dense_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -397,7 +397,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, sparse_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, sparse_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -416,7 +416,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, gmres_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, gmres_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -432,13 +432,13 @@ if __name__ == "__main__":
             gmres_solver.reset()
 
         print("BDF-3 dense tests:")
-        alpha = np.array([1, -18.0/11.0, 9.0/11.0, -2.0/11.0], dtype=float)
-        beta = np.array([6.0/11.0, 0, 0, 0], dtype=float)
+        alphas = np.array([1, -18.0/11.0, 9.0/11.0, -2.0/11.0], dtype=float)
+        betas = np.array([6.0/11.0, 0, 0, 0], dtype=float)
         hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, dense_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, dense_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -457,7 +457,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, sparse_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, sparse_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -476,7 +476,7 @@ if __name__ == "__main__":
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
-            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alpha, beta, gmres_solver)
+            t, y, success = implicit_lmm(f, tspan, y0, hvals[ih], alphas, betas, gmres_solver)
             if (not success):
                 print("  failure with h =", hvals[ih])
             else:
@@ -494,13 +494,13 @@ if __name__ == "__main__":
     if (test_dirk):
         # DIRK tests
         print("DIRK-3 dense tests:")
-        alpha = 0.43586652150845906
-        tau2 = 0.5*(1.0+alpha)
-        A = np.array([[alpha, 0, 0],
-                      [tau2-alpha, alpha, 0],
-                      [-0.25*(6*alpha**2 - 16*alpha + 1), 0.25*(6*alpha**2 - 20*alpha + 5), alpha]], dtype=float)
-        b = np.array([-0.25*(6*alpha**2 - 16*alpha + 1), 0.25*(6*alpha**2 - 20*alpha + 5), alpha], dtype=float)
-        c = np.array([alpha, tau2, 1], dtype=float)
+        gamma = 0.43586652150845906
+        tau2 = 0.5*(1.0+gamma)
+        A = np.array([[gamma, 0, 0],
+                      [tau2-gamma, gamma, 0],
+                      [-0.25*(6*gamma**2 - 16*gamma + 1), 0.25*(6*gamma**2 - 20*gamma + 5), gamma]], dtype=float)
+        b = np.array([-0.25*(6*gamma**2 - 16*gamma + 1), 0.25*(6*gamma**2 - 20*gamma + 5), gamma], dtype=float)
+        c = np.array([gamma, tau2, 1], dtype=float)
         hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):

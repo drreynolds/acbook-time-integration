@@ -7,7 +7,7 @@ from implicit_solver import ImplicitSolver
 
 def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     """
-    Usage: t, y, success = explicit_lmm(f, tspan, y0, h, alpha, beta, solver)
+    Usage: t, y, success = implicit_lmm(f, tspan, y0, h, alpha, beta, solver)
 
     Time-stepping function with syntax similar to
     scipy.integrate.solve_ivp, and that uses an implicit linear
@@ -46,19 +46,17 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
         if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h"
+                             % (tspan[n],tspan[n+1]))
 
     # verify that input LMM coefficients are valid
     k = alpha.size
     if (abs(alpha[0]) == 0):
-        raise ValueError("LMM coefficient must have nonzero alpha[0], ",
-                         alpha[0], " was input")
+        raise ValueError("LMM coefficient must have nonzero alpha[0], ", alpha[0], " was input")
     if (beta.size != k):
-        raise ValueError("LMM coefficient arrays must be the same length,",
-                         beta.size, " != ", k)
+        raise ValueError("LMM coefficient arrays must be the same length,", beta.size, " != ", k)
     if (np.shape(y0)[0] < (k-1)):
-        raise ValueError("insufficient initial conditions provided, ",
-                         np.shape(y0)[0], " < ", alpha.size-1)
+        raise ValueError("insufficient initial conditions provided, ", np.shape(y0)[0], " < ", alpha.size-1)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
@@ -77,7 +75,7 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     for iout in range(1,tspan.size):
 
         # determine how many internal steps are required
-        N = int((tspan[iout]-tspan[iout-1])/h)
+        N = round((tspan[iout]-tspan[iout-1])/h)
 
         # reset "current" t that will be evolved internally
         tcur = tspan[iout-1]
@@ -93,7 +91,7 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
 
             # create implicit residual and Jacobian solver for this step
             F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(tcur,ynew)
-            solver.setup_linear_solver(tcur, h*beta[0]/alpha[0])
+            solver.setup_linear_solver(tcur, -h*beta[0]/alpha[0])
 
             # perform implicit solve, and return on solver failure
             ycur, iters, success = solver.solve(F, yprev[-1])

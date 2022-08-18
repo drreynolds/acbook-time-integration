@@ -114,8 +114,8 @@ class ImplicitSolver:
         """
         import numpy as np
 
-        # ensure that linear_solver has been setup
-        assert self.linear_solver != 0, "linear_solver has not been set up"
+        # ensure that linear_solver has been created
+        assert self.linear_solver != 0, "linear_solver has not been created"
 
         # set scalar-valued absolute tolerance for linear solver
         if (np.isscalar(self.atol)):
