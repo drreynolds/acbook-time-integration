@@ -62,7 +62,7 @@ def backward_euler(f, tspan, ycur, h, solver):
 
             # create implicit residual and Jacobian solver for this step
             F = lambda ynew: ynew - ycur - h*f(tcur,ynew)
-            solver.setup_linear_solver(tcur, h)
+            solver.setup_linear_solver(tcur, -h)
 
             # perform implicit solve, and return on solver failure
             ycur, iters, success = solver.solve(F, ycur)

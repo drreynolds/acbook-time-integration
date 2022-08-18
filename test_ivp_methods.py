@@ -91,12 +91,12 @@ for i in range(Nout+1):
     yref[i,:] = ytrue(tspan[i])
 
 # flags to enable/disable classes of tests
-test_fwd_euler = False# True
+test_fwd_euler = True
 test_bwd_euler = True
-test_erk = False# True
-test_explicit_lmm = False# True
+test_erk = True
+test_explicit_lmm = True
 test_implicit_lmm = True
-test_dirk = False# True
+test_dirk = True
 
 # run tests if this file is called as main
 if __name__ == "__main__":
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     if (test_fwd_euler):
         # forward Euler tests
         print("forward Euler tests:")
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     if (test_bwd_euler):
         # backward Euler tests
         print("backward Euler dense tests:")
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -152,7 +152,6 @@ if __name__ == "__main__":
             dense_solver.reset()
 
         print("backward Euler sparse tests:")
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -172,7 +171,6 @@ if __name__ == "__main__":
             sparse_solver.reset()
 
         print("backward Euler gmres tests:")
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -198,7 +196,7 @@ if __name__ == "__main__":
         A = np.array([[0, 0], [0.5/kappa, 0]], dtype=float)
         b = np.array([1-kappa, kappa], dtype=float)
         c = np.array([0, 0.5/kappa], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -218,7 +216,7 @@ if __name__ == "__main__":
         A = np.array([[0, 0, 0], [2.0/3.0, 0, 0], [2.0/3.0-0.25/delta, 0.25/delta, 0]], dtype=float)
         b = np.array([0.25, 0.75-delta, delta], dtype=float)
         c = np.array([0, 2.0/3.0, 2.0/3.0], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128, 256], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -237,7 +235,7 @@ if __name__ == "__main__":
         A = np.array([[0, 0, 0, 0], [0.5, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 1, 0]], dtype=float)
         b = np.array([1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0], dtype=float)
         c = np.array([0, 0.5, 0.5, 1], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128, 256], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -257,7 +255,7 @@ if __name__ == "__main__":
         print("AB-1 tests:")
         alphas = np.array([1, -1], dtype=float)
         betas = np.array([0, 1], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512, 1024], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256, 512], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
@@ -275,7 +273,7 @@ if __name__ == "__main__":
         print("AB-2 tests:")
         alphas = np.array([1, -1, 0], dtype=float)
         betas = np.array([0, 1.5, -0.5], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
@@ -293,7 +291,7 @@ if __name__ == "__main__":
         print("AB-3 tests:")
         alphas = np.array([1, -1, 0, 0], dtype=float)
         betas = np.array([0, 23.0/12.0, -16.0/12.0, 5.0/12.0], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
@@ -314,7 +312,7 @@ if __name__ == "__main__":
         print("BDF-1 dense tests:")
         alphas = np.array([1, -1], dtype=float)
         betas = np.array([1, 0], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0)])
@@ -374,7 +372,7 @@ if __name__ == "__main__":
         print("BDF-2 dense tests:")
         alphas = np.array([1, -4.0/3.0, 1.0/3.0], dtype=float)
         betas = np.array([2.0/3.0, 0, 0], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
@@ -434,7 +432,7 @@ if __name__ == "__main__":
         print("BDF-3 dense tests:")
         alphas = np.array([1, -18.0/11.0, 9.0/11.0, -2.0/11.0], dtype=float)
         betas = np.array([6.0/11.0, 0, 0, 0], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([8, 16, 32, 64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
@@ -501,7 +499,7 @@ if __name__ == "__main__":
                       [-0.25*(6*gamma**2 - 16*gamma + 1), 0.25*(6*gamma**2 - 20*gamma + 5), gamma]], dtype=float)
         b = np.array([-0.25*(6*gamma**2 - 16*gamma + 1), 0.25*(6*gamma**2 - 20*gamma + 5), gamma], dtype=float)
         c = np.array([gamma, tau2, 1], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -567,7 +565,7 @@ if __name__ == "__main__":
                       [2*gamma, 1.0-4*gamma, gamma]], dtype=float)
         b = np.array([delta, 1.0-2*delta, delta], dtype=float)
         c = np.array([gamma, 0.5, 1-gamma], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([64, 128, 256, 512], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)
@@ -633,7 +631,7 @@ if __name__ == "__main__":
                       [-2481679516057.0/4626464057815, -197112422687.0/6604378783090, 3952887910906.0/9713059315593, 4906835613583.0/8134926921134, 4024571134387.0/14474071345096]], dtype=float)
         b = np.array([-2522702558582.0/12162329469185, 1018267903655.0/12907234417901, 4542392826351.0/13702606430957, 5001116467727.0/12224457745473, 1509636094297.0/3891594770934], dtype=float)
         c = np.array([4024571134387.0/14474071345096, 5555633399575.0/5431021154178, 5255299487392.0/12852514622453, 3.0/20, 10449500210709.0/14474071345096], dtype=float)
-        hvals = (tf-t0)/Nout/np.array([16, 32, 64, 128, 256], dtype=float)
+        hvals = (tf-t0)/Nout/np.array([4, 8, 16, 32, 64, 128], dtype=float)
         errs = np.ones(hvals.size)
         for ih in range(hvals.size):
             y0 = ytrue(t0)

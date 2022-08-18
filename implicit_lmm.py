@@ -46,8 +46,7 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
         if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h"
-                             % (tspan[n],tspan[n+1]))
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
 
     # verify that input LMM coefficients are valid
     k = alpha.size

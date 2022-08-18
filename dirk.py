@@ -84,7 +84,7 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
                 # construct implicit residual and Jacobian solver for this stage
                 tstage = tcur+h*c[istage]
                 F = lambda zcur: zcur - data - h*A[istage,istage]*f(tstage,zcur)
-                solver.setup_linear_solver(tstage, h*A[istage,istage])
+                solver.setup_linear_solver(tstage, -h*A[istage,istage])
 
                 # perform implicit solve, and return on solver failure
                 z, iters, success = solver.solve(F, ycur)
