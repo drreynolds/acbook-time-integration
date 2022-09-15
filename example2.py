@@ -50,7 +50,7 @@ def J_matvec(t,y,v):
     """
     return (J_dense(t,y)@v)
 
-def reference_solution(N):
+def reference_solution(N, reltol=1e-8, abstol=[1e-16, 1e-20, 1e-18]):
     """
     Function that returns a high-accuracy reference solution to
     the IVP over a specified number of time outputs -- both the
@@ -60,7 +60,7 @@ def reference_solution(N):
     from scipy.integrate import solve_ivp
     tvals = np.linspace(t0, tf, N)
     ivpsol = solve_ivp(f, (t0,tf), y0, method='BDF', jac=J_dense,
-                       t_eval=tvals, rtol=1e-8, atol=[1e-16, 1e-20, 1e-18])
+                       t_eval=tvals, rtol=reltol, atol=abstol)
     if (not ivpsol.success):
         raise Exception("Failed to generate reference solution")
     return [tvals, ivpsol.y]
