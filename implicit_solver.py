@@ -38,7 +38,9 @@ class ImplicitSolver:
         self.maxiter = maxiter
         self.rtol = rtol
         self.atol = atol
-        self.Jfreq = Jfreq
+        self.Jfreq = 1
+        if (Jfreq > 0):
+            self.Jfreq = Jfreq
         # internal data
         self.linear_solver = 0
         self.total_iters = 0
@@ -87,7 +89,7 @@ class ImplicitSolver:
                 return LinearOperator((y.size,y.size), matvec=Jsolve)
         elif (self.solver_type == 'pgmres'):
             def J(y,rtol,abstol):
-                P = P_setup_fcn(t,y,gamma,rtol,abstol)
+                P = self.prec(t,y,gamma,rtol,abstol)
                 Jv = lambda v: v + gamma*self.f_y(t,y,v)
                 J = LinearOperator((y.size,y.size), matvec=Jv)
                 Jsolve = lambda b: gmres(J, b, tol=rtol, atol=abstol, M=P)[0]
