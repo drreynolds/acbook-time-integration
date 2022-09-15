@@ -62,7 +62,7 @@ if __name__ == "__main__":
     for ih in range(hvals.size):
         y0 = ytrue(t0)
         t, y, success = backward_euler(f, tspan, y0, hvals[ih], implicit_solver)
-        err = np.transpose(y)-ytrue(t)
+        err = np.abs(np.transpose(y)-ytrue(t))
         print(" ")
         print("h = ", hvals[ih])
         print("   t      y          error")
