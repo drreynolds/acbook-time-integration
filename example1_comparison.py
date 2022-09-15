@@ -19,7 +19,7 @@ print("Brusselator IVP Tests")
 
 # generate solution plot
 tspan,yref = ex1.reference_solution(501)
-fig = plt.figure(figsize=(8,6), dpi=200)
+fig = plt.figure(figsize=(8,6), dpi=100)
 plt.plot(tspan, yref[0,:], label='n(X)')
 plt.plot(tspan, yref[1,:], label='n(Y)')
 plt.xlabel('time')
@@ -140,7 +140,7 @@ if (test_explicit_lmm):
     betas = np.array([0, 1.5, -0.5], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
-        y0 = np.array([ytrue(t0-hvals[ih]), ytrue(t0)])
+        y0 = np.array([ex1.y0, ex1.y0])
         t, y, success = explicit_lmm(ex1.f, tspan, y0, hvals[ih], alphas, betas)
         if (not success):
             print("  failure with h =", hvals[ih])
@@ -157,7 +157,7 @@ if (test_explicit_lmm):
     betas = np.array([0, 23.0/12.0, -16.0/12.0, 5.0/12.0], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
-        y0 = np.array([ytrue(t0-2*hvals[ih]), ytrue(t0-hvals[ih]), ytrue(t0)])
+        y0 = np.array([ex1.y0, ex1.y0, ex1.y0])
         t, y, success = explicit_lmm(ex1.f, tspan, y0, hvals[ih], alphas, betas)
         if (not success):
             print("  failure with h =", hvals[ih])
