@@ -91,15 +91,15 @@ for i in range(Nout+1):
     yref[i,:] = ytrue(tspan[i])
 
 # flags to enable/disable classes of tests
-test_fwd_euler = False #True
+test_fwd_euler = True
 test_bwd_euler = True
-test_erk = False #True
-test_explicit_lmm = False #True
-test_implicit_lmm = False #True
-test_dirk = False #True
-test_dense = False #True
+test_erk = True
+test_explicit_lmm = True
+test_implicit_lmm = True
+test_dirk = True
+test_dense = True
 test_sparse = True
-test_gmres = False #True
+test_gmres = True
 
 # run tests if this file is called as main
 if __name__ == "__main__":
