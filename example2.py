@@ -57,8 +57,12 @@ def reference_solution(tvals):
     array of these time outputs and the solution at these outputs
     are returned.
     """
-    yref = np.zeros(np.size(y0),np.size(tvals))
-    return yref
+    from scipy.integrate import solve_ivp
+    ivpsol = solve_ivp(f, (t0,tf), y0, method='BDF', jac=J_dense,
+                       t_eval=tvals, rtol=1e-8, atol=[1e-16, 1e-20, 1e-18])
+    if (not ivpsol.success):
+        raise Exception("Failed to generate reference solution")
+    return ivpsol.y
 
 def Jacobian_eigenvalues(t,y):
     """
