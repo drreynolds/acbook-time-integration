@@ -18,39 +18,39 @@ import example2 as ex2
 print("Oregonator preconditioning tests")
 
 # preconditioning matrix
-def PMatrix(t, y, gamma):
+def PMatrix(t, y, h):
     """
     Preconditioning matrix that approximates the inverse of the nonlinear solver Jacobian,
-    I - gamma*Jf, where Jf(t,y) is the Jacobian of the IVP right-hand side function.
+    I - h*Jf, where Jf(t,y) is the Jacobian of the IVP right-hand side function.
     """
     Jf = np.array([[ -ex2.k1*y[1] - 2.0*ex2.k3*y[0], -ex2.k1*y[0], 0 ],
                      [ -ex2.k1*y[1], -ex2.k1*y[0], 0 ],
                      [ 0, 0, 0.0 ]], dtype=float)
-    return np.linalg.inv((np.identity(3) - gamma*Jf))
+    return np.linalg.inv((np.identity(3) - h*Jf))
 
 # preconditioner solver constructor
-def PrecSetup(t, y, gamma, rtol, abstol):
-    P = PMatrix(t, y, gamma)
+def PrecSetup(t, y, h, rtol, abstol):
+    P = PMatrix(t, y, h)
     return aslinearoperator(P)
 
 # implicit solver matrix
-def JMatrix(t, y, gamma):
+def JMatrix(t, y, h):
     """
-    Nonlinear solver Jacobian matrix, I - gamma*Jf, where Jf(t,y) is the
+    Nonlinear solver Jacobian matrix, I - h*Jf, where Jf(t,y) is the
     Jacobian of the IVP right-hand side function.
     """
-    return (np.identity(3) - gamma*ex2.J_dense(t,y))
+    return (np.identity(3) - h*ex2.J_dense(t,y))
 
 # preconditioned implicit solver matrix
-def JPMatrix(t, y, gamma):
+def JPMatrix(t, y, h):
     """
     Preconditioned nonlinear solver Jacobian matrix, JP, at a given (t,y) input.
     """
-    return (JMatrix(t,y,gamma) @ PMatrix(t,y,gamma))
+    return (JMatrix(t,y,h) @ PMatrix(t,y,h))
 
 # check maximum eigenvalue spread for preconditioned and non-preconditioned
 # implicit solver matrices along the solution trajectory
-def compare_stiffness(N, gamma):
+def compare_stiffness(N, h):
     """
     Utility routine to approximate the maximum eigenvalue spread for both
     the preconditioned and non-preconditioned implicit solver matrices over N
@@ -58,14 +58,14 @@ def compare_stiffness(N, gamma):
     """
     import numpy.linalg as la
     tspan,yref = ex2.reference_solution(N)
-    Jeigs = la.eigvals(JMatrix(tspan[0], yref[:,0], gamma))
+    Jeigs = la.eigvals(JMatrix(tspan[0], yref[:,0], h))
     Jstiffness = np.max(np.abs(Jeigs))/np.min(np.abs(Jeigs))
-    JPeigs = la.eigvals(JPMatrix(tspan[0], yref[:,0], gamma))
+    JPeigs = la.eigvals(JPMatrix(tspan[0], yref[:,0], h))
     JPstiffness = np.max(np.abs(JPeigs))/np.min(np.abs(JPeigs))
     for i in range(1,np.size(tspan)):
-        Jeigs = la.eigvals(JMatrix(tspan[i], yref[:,i], gamma))
+        Jeigs = la.eigvals(JMatrix(tspan[i], yref[:,i], h))
         Jstiffness = max(Jstiffness, np.max(np.abs(Jeigs))/np.min(np.abs(Jeigs)))
-        JPeigs = la.eigvals(JPMatrix(tspan[i], yref[:,i], gamma))
+        JPeigs = la.eigvals(JPMatrix(tspan[i], yref[:,i], h))
         JPstiffness = max(JPstiffness, np.max(np.abs(JPeigs))/np.min(np.abs(JPeigs)))
     return (Jstiffness, JPstiffness)
 
@@ -73,9 +73,9 @@ def compare_stiffness(N, gamma):
 # non-preconditioned implicit solver matrices
 Nout = 20
 interval = ex2.tf - ex2.t0
-gammas = interval/Nout/np.array([100, 200, 300, 400, 500, 600], dtype=float)
+hvals = interval/Nout/np.array([100, 200, 300, 400, 500, 600], dtype=float)
 print("Maximum approxmated stiffness:")
-print("     gamma     non-prec    precond")
-for gamma in gammas:
-    Jstiff, JPstiff = compare_stiffness(501, gamma)
-    print("    %.2e   %.2e   %.2e" % (gamma, Jstiff, JPstiff))
+print("      h        non-prec    precond")
+for h in hvals:
+    Jstiff, JPstiff = compare_stiffness(501, h)
+    print("    %.2e   %.2e   %.2e" % (h, Jstiff, JPstiff))
