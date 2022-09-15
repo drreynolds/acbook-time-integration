@@ -74,7 +74,7 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     for iout in range(1,tspan.size):
 
         # determine how many internal steps are required
-        N = round((tspan[iout]-tspan[iout-1])/h)
+        N = int(round((tspan[iout]-tspan[iout-1])/h))
 
         # reset "current" t that will be evolved internally
         tcur = tspan[iout-1]
