@@ -13,8 +13,7 @@ from scipy.integrate import solve_ivp
 from example2 import *
 
 # generate solution plot
-tspan = np.linspace(t0, tf, 501)
-yref = reference_solution(tspan)
+tspan,yref = reference_solution(501)
 fig = plt.figure(figsize=(8,6), dpi=200)
 ax = fig.add_subplot(311)
 ax.plot(tspan, yref[0,:])

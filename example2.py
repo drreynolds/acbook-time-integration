@@ -50,19 +50,20 @@ def J_matvec(t,y,v):
     """
     return (J_dense(t,y)@v)
 
-def reference_solution(tvals):
+def reference_solution(N):
     """
     Function that returns a high-accuracy reference solution to
-    the IVP over a specified set of time outputs -- both the
+    the IVP over a specified number of time outputs -- both the
     array of these time outputs and the solution at these outputs
     are returned.
     """
     from scipy.integrate import solve_ivp
+    tvals = np.linspace(t0, tf, N)
     ivpsol = solve_ivp(f, (t0,tf), y0, method='BDF', jac=J_dense,
                        t_eval=tvals, rtol=1e-8, atol=[1e-16, 1e-20, 1e-18])
     if (not ivpsol.success):
         raise Exception("Failed to generate reference solution")
-    return ivpsol.y
+    return [tvals, ivpsol.y]
 
 def Jacobian_eigenvalues(t,y):
     """
@@ -70,4 +71,17 @@ def Jacobian_eigenvalues(t,y):
     specific set of input values.
     """
     import numpy.linalg as la
-    return la.eig(J_dense(t,y))
+    return la.eigvals(J_dense(t,y))
+
+def maximum_stiffness(N):
+    """
+    Function to approximate the maximum eigenvalue spread over N
+    evenly-spaced time points along the solution trajectory.
+    """
+    tspan,yref = reference_solution(N)
+    evals = Jacobian_eigenvalues(tspan[0], yref[:,0])
+    stiffness = np.max(np.abs(evals))/np.min(np.abs(evals))
+    for i in range(1,np.size(tspan)):
+        evals = Jacobian_eigenvalues(tspan[i], yref[:,i])
+        stiffness = max(stiffness, np.max(np.abs(evals))/np.min(np.abs(evals)))
+    return stiffness
