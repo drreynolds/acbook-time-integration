@@ -5,6 +5,37 @@
 # Southern Methodist University
 from implicit_solver import ImplicitSolver
 
+def implicit_lmm_step(f, yarr, farr, t, h, alpha, beta, sol):
+    """
+    Usage: t, yarr, farr, sol, success = implicit_lmm_step(f, yarr, farr, t, h, alpha, beta, sol)
+
+    Utility routine to take a single implicit LMM time step,
+    where the inputs (t,yarr,farr,sol) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    # create LMM residual and Jacobia solver for this step
+    t += h
+    data = (h*beta[1]/alpha[0])*farr[-1] - (alpha[1]/alpha[0])*yarr[-1]
+    for i in range(2,alpha.size):
+        data += (h*beta[i]/alpha[0])*farr[-i] - (alpha[i]/alpha[0])*yarr[-i]
+
+    # create implicit residual and Jacobian solver for this step
+    F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(t,ynew)
+    sol.setup_linear_solver(t, -h*beta[0]/alpha[0])
+
+    # perform implicit solve, and return on solver failure
+    y, iters, success = sol.solve(F, yarr[-1])
+    if (not success):
+        return (t, yarr, farr, sol, False)
+
+    # add current solution and RHS to queue, and remove oldest solution and RHS
+    yarr.pop(0)
+    yarr.append(y)
+    farr.pop(0)
+    farr.append(f(t,y))
+    return (t, yarr, farr, sol, True)
+
+
 def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     """
     Usage: t, y, success = implicit_lmm(f, tspan, y0, h, alpha, beta, solver)
@@ -82,30 +113,17 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # create LMM residual and Jacobia solver for this step
-            tcur += h
-            data = (h*beta[1]/alpha[0])*fprev[-1] - (alpha[1]/alpha[0])*yprev[-1]
-            for i in range(2,k):
-                data += (h*beta[i]/alpha[0])*fprev[-i] - (alpha[i]/alpha[0])*yprev[-i]
-
-            # create implicit residual and Jacobian solver for this step
-            F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(tcur,ynew)
-            solver.setup_linear_solver(tcur, -h*beta[0]/alpha[0])
-
-            # perform implicit solve, and return on solver failure
-            ycur, iters, success = solver.solve(F, yprev[-1])
-            if (not success):
-                return [t, y, False]
-
-            # add current solution and RHS to queue, and remove oldest solution and RHS
-            yprev.pop(0)
-            yprev.append(ycur)
-            fprev.pop(0)
-            fprev.append(f(tcur,ycur))
+            # perform LMM update
+            tcur, yprev, fprev, solver, step_success = implicit_lmm_step(f, yprev, fprev,
+                                                                         tcur, h, alpha,
+                                                                         beta, solver)
+            if (not step_success):
+                print("implicit_lmm error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = ycur
+        y[iout,:] = yprev[-1]
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)

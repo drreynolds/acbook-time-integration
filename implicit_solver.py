@@ -156,7 +156,7 @@ class ImplicitSolver:
             # check for convergence
             if (np.linalg.norm(h / (self.atol + self.rtol*np.abs(y)))/np.sqrt(n) < 1):
                 success = True
-                return [y, iters, success]
+                return (y, iters, success)
 
             # update nonlinear residual
             F = Ffcn(y)
@@ -167,7 +167,7 @@ class ImplicitSolver:
                 self.total_setups += 1
 
         # if we made it here, return with current solution (note that success is still False)
-        return [y, iters, success]
+        return (y, iters, success)
 
     def get_total_iters(self):
         """ Returns the total number of nonlinear solver iterations over the life of the solver """

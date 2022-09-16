@@ -4,6 +4,19 @@
 # Department of Mathematics
 # Southern Methodist University
 
+def forward_euler_step(f, t, y, h):
+    """
+    Usage: t, y, success = forward_euler_step(f, t, y, h)
+
+    Utility routine to take a single forward Euler time step,
+    where the inputs (t,y) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    y += h*f(t,y)
+    t += h
+    return (t, y, True)
+
+
 def forward_euler(f, tspan, ycur, h):
     """
     Usage: t, y, success = forward_euler(f, tspan, y0, h)
@@ -54,13 +67,15 @@ def forward_euler(f, tspan, ycur, h):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # perform forward Euler update, and update tcur
-            ycur += h*f(tcur,ycur)
-            tcur += h
+            # perform forward Euler update
+            tcur, ycur, step_success = forward_euler_step(f, tcur, ycur, h)
+            if (not step_success):
+                print("forward_euler error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
         y[iout,:] = ycur
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)

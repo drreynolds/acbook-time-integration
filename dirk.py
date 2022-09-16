@@ -5,6 +5,44 @@
 # Southern Methodist University
 from implicit_solver import ImplicitSolver
 
+def dirk_step(f, t, y, k, h, A, b, c, sol):
+    """
+    Usage: t, y, k, sol, success = dirk_step(f, t, y, k, h, A, b, c, sol)
+
+    Utility routine to take a single diagonally-implicit RK time step,
+    where the inputs (t,y,k,sol) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    import numpy as np
+
+    # loop over stages, computing RHS vectors
+    for i in range(c.size):
+
+        # construct "data" for this stage solve
+        data = np.copy(y)
+        for j in range(i):
+            data += h*A[i,j]*k[j,:]
+
+        # construct implicit residual and Jacobian solver for this stage
+        tstage = t + h*c[i]
+        F = lambda zcur: zcur - data - h*A[i,i]*f(tstage,zcur)
+        sol.setup_linear_solver(tstage, -h*A[i,i])
+
+        # perform implicit solve, and return on solver failure
+        z, iters, success = sol.solve(F, y)
+        if (not success):
+            return (t, y, k, sol, False)
+
+        # store RHS at this stage
+        k[i,:] = f(tstage, z)
+
+    # update time step solution
+    for i in range(b.size):
+        y += h*b[i]*k[i,:]
+    t += h
+    return (t, y, k, sol, True)
+
+
 def dirk(f, tspan, ycur, h, A, b, c, solver):
     """
     Usage: t, y, success = dirk(f, tspan, y0, h, A, b, c, solver)
@@ -73,35 +111,16 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # loop over stages
-            for istage in range(c.size):
-
-                # construct "data" for this stage solve
-                data = np.copy(ycur)
-                for jstage in range(istage):
-                    data += h*A[istage,jstage]*k[jstage,:]
-
-                # construct implicit residual and Jacobian solver for this stage
-                tstage = tcur+h*c[istage]
-                F = lambda zcur: zcur - data - h*A[istage,istage]*f(tstage,zcur)
-                solver.setup_linear_solver(tstage, -h*A[istage,istage])
-
-                # perform implicit solve, and return on solver failure
-                z, iters, success = solver.solve(F, ycur)
-                if (not success):
-                    return [t, y, False]
-
-                # store RHS at this stage
-                k[istage,:] = f(tstage, z)
-
-            # update time step solution and tcur
-            for istage in range(b.size):
-                ycur += h*b[istage]*k[istage,:]
-            tcur += h
+            # perform diagonally-implicit Runge--Kutta update
+            tcur, ycur, k, solver, step_success = dirk_step(f, tcur, ycur, k,
+                                                            h, A, b, c, solver)
+            if (not step_success):
+                print("dirk error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
         y[iout,:] = ycur
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)

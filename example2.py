@@ -63,7 +63,7 @@ def reference_solution(N, reltol=1e-8, abstol=[1e-16, 1e-20, 1e-18]):
                        t_eval=tvals, rtol=reltol, atol=abstol)
     if (not ivpsol.success):
         raise Exception("Failed to generate reference solution")
-    return [tvals, ivpsol.y]
+    return (tvals, ivpsol.y)
 
 def Jacobian_eigenvalues(t,y):
     """

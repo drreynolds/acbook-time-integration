@@ -4,6 +4,31 @@
 # Department of Mathematics
 # Southern Methodist University
 
+def erk_step(f, t, y, k, h, A, b, c):
+    """
+    Usage: t, y, k, success = erk_step(f, t, y, k, h, A, b, c)
+
+    Utility routine to take a single explicit RK time step,
+    where the inputs (t,y,k) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    import numpy as np
+
+    # loop over stages, computing RHS vectors
+    k[0,:] = f(t,y)
+    for i in range(1,c.size):
+        z = np.copy(y)
+        for j in range(i):
+            z += h*A[i,j]*k[j,:]
+        k[i,:] = f(t+c[i]*h, z)
+
+    # update time step solution and tcur
+    for i in range(b.size):
+        y += h*b[i]*k[i,:]
+    t += h
+    return (t, y, k, True)
+
+
 def erk(f, tspan, ycur, h, A, b, c):
     """
     Usage: t, y, success = erk(f, tspan, y0, h, A, b, c)
@@ -69,22 +94,15 @@ def erk(f, tspan, ycur, h, A, b, c):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # loop over each stage, computing RHS vectors
-            k[0,:] = f(tcur,ycur)
-            for istage in range(1,c.size):
-                z = np.copy(ycur)
-                for jstage in range(istage):
-                    z += h*A[istage,jstage]*k[jstage,:]
-                k[istage,:] = f(tcur+c[istage]*h, z)
-
-            # update time step solution and tcur
-            for istage in range(b.size):
-                ycur += h*b[istage]*k[istage,:]
-            tcur += h
+            # perform explicit Runge--Kutta update
+            tcur, ycur, k, step_success = erk_step(f, tcur, ycur, k, h, A, b, c)
+            if (not step_success):
+                print("erk error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
         y[iout,:] = ycur
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)

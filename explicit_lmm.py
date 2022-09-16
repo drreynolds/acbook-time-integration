@@ -4,6 +4,27 @@
 # Department of Mathematics
 # Southern Methodist University
 
+def explicit_lmm_step(f, yarr, farr, t, h, alpha, beta):
+    """
+    Usage: t, yarr, farr, success = explicit_lmm_step(f, yarr, farr, t, h, alpha, beta)
+
+    Utility routine to take a single explicit LMM time step,
+    where the inputs (t,yarr,farr) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    y = (h*beta[1]/alpha[0])*farr[-1] - (alpha[1]/alpha[0])*yarr[-1]
+    for i in range(2,alpha.size):
+        y += (h*beta[i]/alpha[0])*farr[-i] - (alpha[i]/alpha[0])*yarr[-i]
+    t += h
+
+    # add current solution and RHS to queue, and remove oldest solution and RHS
+    yarr.pop(0)
+    yarr.append(y)
+    farr.pop(0)
+    farr.append(f(t,y))
+    return (t, yarr, farr, True)
+
+
 def explicit_lmm(f, tspan, y0, h, alpha, beta):
     """
     Usage: t, y, success = explicit_lmm(f, tspan, y0, h, alpha, beta)
@@ -82,21 +103,16 @@ def explicit_lmm(f, tspan, y0, h, alpha, beta):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # perform LMM update, and update tcur
-            ycur = (h*beta[1]/alpha[0])*fprev[-1] - (alpha[1]/alpha[0])*yprev[-1]
-            for i in range(2,k):
-                ycur += (h*beta[i]/alpha[0])*fprev[-i] - (alpha[i]/alpha[0])*yprev[-i]
-            tcur += h
-
-            # add current solution and RHS to queue, and remove oldest solution and RHS
-            yprev.pop(0)
-            yprev.append(ycur)
-            fprev.pop(0)
-            fprev.append(f(tcur,ycur))
+            # perform LMM update
+            tcur, yprev, fprev, step_success = explicit_lmm_step(f, yprev, fprev,
+                                                                 tcur, h, alpha, beta)
+            if (not step_success):
+                print("explicit_lmm error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = ycur
+        y[iout,:] = yprev[-1]
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)

@@ -5,6 +5,30 @@
 # Southern Methodist University
 from implicit_solver import ImplicitSolver
 
+def backward_euler_step(f, t, y, h, sol):
+    """
+    Usage: t, y, sol, success = backward_euler_step(f, t, y, h, sol)
+
+    Utility routine to take a single backward Euler time step,
+    where the inputs (t,y,sol) are overwritten by the updated versions.
+    If success==True then the step succeeded; otherwise it failed.
+    """
+    import numpy as np
+
+    # update t for this step
+    t += h
+
+    # create implicit residual and Jacobian solver for this step
+    F = lambda ynew: ynew - y - h*f(t,ynew)
+    sol.setup_linear_solver(t, -h)
+
+    # perform implicit solve, and return on solver failure
+    y, iters, success = sol.solve(F, y)
+    if (not success):
+        return (t, y, sol, False)
+    return (t, y, sol, True)
+
+
 def backward_euler(f, tspan, ycur, h, solver):
     """
     Usage: t, y, success = backward_euler(f, tspan, y0, h, solver)
@@ -57,23 +81,16 @@ def backward_euler(f, tspan, ycur, h, solver):
         # iterate over internal time steps to reach next output
         for n in range(N):
 
-            # update tcur for this step
-            tcur += h
-
-            # create implicit residual and Jacobian solver for this step
-            F = lambda ynew: ynew - ycur - h*f(tcur,ynew)
-            solver.setup_linear_solver(tcur, -h)
-
-            # perform implicit solve, and return on solver failure
-            ycur, iters, success = solver.solve(F, ycur)
-            if (not success):
-                print("backward_euler warning: solver failure in computing output %i, at step %i, t = %f (iters = %i)" %
-                      (iout, n, tcur, iters))
-                return [t, y, False]
+            # perform backward Euler step
+            tcur, ycur, solver, step_success = backward_euler_step(f, tcur, ycur,
+                                                                   h, solver)
+            if (not step_success):
+                print("backward_euler error in time step at t =", tcur)
+                return (t, y, False)
 
         # store current results in output arrays
         t[iout] = tcur
         y[iout,:] = ycur
 
     # return with "success" flag
-    return [t, y, True]
+    return (t, y, True)
