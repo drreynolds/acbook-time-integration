@@ -39,7 +39,7 @@ hvals = interval/Nout/np.array([10, 20, 30, 40, 50, 60], dtype=float)
 # flags to enable/disable classes of tests
 test_fwd_euler = True
 test_erk = True
-test_explicit_lmm = False
+test_explicit_lmm = True
 
 # forward Euler tests
 if (test_fwd_euler):

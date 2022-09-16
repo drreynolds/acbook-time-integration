@@ -55,9 +55,9 @@ solver = ImplicitSolver(ex2.J_dense, solver_type='dense', maxiter=20,
                         rtol=1e-9, atol=1e-12, Jfreq=3)
 
 # flags to enable/disable classes of tests
-test_bwd_euler = True
-test_dirk = True
-test_implicit_lmm = False
+test_bwd_euler = False
+test_dirk = False
+test_implicit_lmm = True
 
 # backward Euler tests
 if (test_bwd_euler):
@@ -197,12 +197,19 @@ if (test_implicit_lmm):
     betas = np.array([2.0/3.0, 0, 0], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
-        y0 = np.array([ex2.y0, ex2.y0])
-        t, y, success = implicit_lmm(ex2.f, tspan, y0, hvals[ih], alphas, betas, solver)
+        tvals = np.array((ex2.t0, ex2.t0+hvals[ih]))
+        initconds = solve_ivp(ex2.f, tvals, ex2.y0, method='BDF', jac=ex2.J_dense,
+                              t_eval=tvals, rtol=1e-8, atol=[1e-16, 1e-20, 1e-18])
+        y0 = np.copy(np.transpose(initconds.y))
+        tspan2 = np.copy(tspan)
+        tspan2[0] = ex2.t0+hvals[ih]
+        yref2 = np.copy(yref)
+        yref2[:,0] = (initconds.y)[:,-1]
+        t, y, success = implicit_lmm(ex2.f, tspan2, y0, hvals[ih], alphas, betas, solver)
         if (not success):
             print("  failure with h =", hvals[ih])
         else:
-            errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
+            errs[ih] = np.linalg.norm(y-np.transpose(yref2),1)
             if (ih == 0):
                 print("  h = %.12e,  error = %.12e,  iters = %i,  setups = %i" %
                       (hvals[ih], errs[ih], solver.get_total_iters(),
@@ -219,12 +226,19 @@ if (test_implicit_lmm):
     betas = np.array([6.0/11.0, 0, 0, 0], dtype=float)
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
-        y0 = np.array([ex2.y0, ex2.y0, ex2.y0])
-        t, y, success = implicit_lmm(ex2.f, tspan, y0, hvals[ih], alphas, betas, solver)
+        tvals = np.array((ex2.t0, ex2.t0+hvals[ih], ex2.t0+2*hvals[ih]))
+        initconds = solve_ivp(ex2.f, np.array((ex2.t0, ex2.t0+2*hvals[ih])), ex2.y0, method='BDF',
+                              jac=ex2.J_dense, t_eval=tvals, rtol=1e-8, atol=[1e-16, 1e-20, 1e-18])
+        y0 = np.copy(np.transpose(initconds.y))
+        tspan2 = np.copy(tspan)
+        tspan2[0] = ex2.t0+2*hvals[ih]
+        yref2 = np.copy(yref)
+        yref2[:,0] = (initconds.y)[:,-1]
+        t, y, success = implicit_lmm(ex2.f, tspan2, y0, hvals[ih], alphas, betas, solver)
         if (not success):
             print("  failure with h =", hvals[ih])
         else:
-            errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
+            errs[ih] = np.linalg.norm(y-np.transpose(yref2),1)
             if (ih == 0):
                 print("  h = %.12e,  error = %.12e,  iters = %i,  setups = %i" %
                       (hvals[ih], errs[ih], solver.get_total_iters(),
