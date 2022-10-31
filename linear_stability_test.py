@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Driver to examing performance of forward and backward Euler on the Dahlquist test problem.
+# Driver to examine performance of forward and backward Euler on the Dahlquist test problem.
 #
 # Daniel R. Reynolds
 # Department of Mathematics
