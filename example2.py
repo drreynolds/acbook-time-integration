@@ -50,7 +50,7 @@ def J_matvec(t,y,v):
     """
     return (J_dense(t,y)@v)
 
-def reference_solution(N, reltol=1e-8, abstol=[1e-16, 1e-20, 1e-18]):
+def reference_solution(N, reltol=1e-8, abstol=[1e-20, 1e-18, 1e-18]):
     """
     Function that returns a high-accuracy reference solution to
     the IVP over a specified number of time outputs -- both the
