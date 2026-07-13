@@ -2,8 +2,6 @@
 
 Code examples for time integration chapter of book, "Astrochemical modelling: practical aspects of microphysics in numerical simulations," edited by Stefano Bovino and Tommaso Grassi.
 
-**Note: the repository currently contains only placeholder files.  When all codes are ready this text will be removed.**
-
 These codes are grouped into the following categories:
 
 * Running examples: each module should include functions that implement the IVP right-hand side, the RHS Jacobian (in dense, sparse, and Jacobian-vector product formats), the reference solution, and a function to return the eigenvalues of the Jacobian.  The module should also specify the initial condition, time interval, and any relevant parameters as module-level global variables
