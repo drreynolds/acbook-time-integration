@@ -16,22 +16,28 @@ t0 = 0.0
 tf = 0.4
 lam = -100.0
 
+
 # problem-defining functions
 def ytrue(t):
     """
     Generates a numpy array containing the true solution to the IVP at a given input t.
     """
     return np.array([np.exp(lam*t)], dtype=float)
-def f(t,y):
+
+
+def f(t, y):
     """
     Right-hand side function, f(t,y), for the Dahlquist IVP
     """
-    return (lam*y)
-def J(t,y):
+    return lam * y
+
+
+def J(t, y):
     """
     Jacobian (in dense matrix format) of the right-hand side function, J(t,y) = df/dy
     """
-    return np.array( [ [lam] ], dtype=float)
+    return np.array([[lam]], dtype=float)
+
 
 # shared testing data
 Nout = 10
@@ -48,23 +54,23 @@ if __name__ == "__main__":
     print("forward Euler tests:")
     for ih in range(hvals.size):
         y0 = ytrue(t0)
-        t, y, success = forward_euler(f, tspan, y0, hvals[ih])
-        err = np.abs(np.transpose(y)-ytrue(t))
+        tt, yy, success = forward_euler(f, tspan, y0, hvals[ih])
+        err = np.abs(np.transpose(yy)-ytrue(tt))
         print(" ")
         print("h = ", hvals[ih])
         print("   t      y          error")
-        for it in range(t.size):
-            print("  %4.2f  %9.2e  %9.2e" % (t[it], y[it,:], err[:,it]))
+        for it in range(tt.size):
+            print("  %4.2f  %9.2e  %9.2e" % (tt[it], yy[it, :], err[:, it]))
 
     # backward Euler tests
     print(" ")
     print("backward Euler tests:")
     for ih in range(hvals.size):
         y0 = ytrue(t0)
-        t, y, success = backward_euler(f, tspan, y0, hvals[ih], implicit_solver)
-        err = np.abs(np.transpose(y)-ytrue(t))
+        tt, yy, success = backward_euler(f, tspan, y0, hvals[ih], implicit_solver)
+        err = np.abs(np.transpose(yy)-ytrue(tt))
         print(" ")
         print("h = ", hvals[ih])
         print("   t      y          error")
-        for it in range(t.size):
-            print("  %4.2f  %9.2e  %9.2e" % (t[it], y[it,:], err[:,it]))
+        for it in range(tt.size):
+            print("  %4.2f  %9.2e  %9.2e" % (tt[it], yy[it, :], err[:, it]))

@@ -3,7 +3,7 @@
 # Daniel R. Reynolds
 # Department of Mathematics
 # Southern Methodist University
-from implicit_solver import ImplicitSolver
+
 
 def backward_euler_step(f, t, y, h, sol):
     """
@@ -13,20 +13,19 @@ def backward_euler_step(f, t, y, h, sol):
     where the inputs (t,y,sol) are overwritten by the updated versions.
     If success==True then the step succeeded; otherwise it failed.
     """
-    import numpy as np
 
     # update t for this step
     t += h
 
     # create implicit residual and Jacobian solver for this step
-    F = lambda ynew: ynew - y - h*f(t,ynew)
+    F = lambda ynew: ynew - y - h*f(t, ynew)
     sol.setup_linear_solver(t, -h)
 
     # perform implicit solve, and return on solver failure
     y, iters, success = sol.solve(F, y)
-    if (not success):
-        return (t, y, sol, False)
-    return (t, y, sol, True)
+    if not success:
+        return t, y, sol, False
+    return t, y, sol, True
 
 
 def backward_euler(f, tspan, ycur, h, solver):
@@ -60,17 +59,18 @@ def backward_euler(f, tspan, ycur, h, solver):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
-            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
+        if abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h):
+            raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" %
+                             (tspan[n], tspan[n+1], h))
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros((tspan.size,ycur.size))
+    y = np.zeros((tspan.size, ycur.size))
     t[0] = tspan[0]
-    y[0,:] = ycur
+    y[0, :] = ycur
 
     # loop over desired output times
-    for iout in range(1,tspan.size):
+    for iout in range(1, tspan.size):
 
         # determine how many internal steps are required
         N = int(round((tspan[iout]-tspan[iout-1])/h))
@@ -84,13 +84,13 @@ def backward_euler(f, tspan, ycur, h, solver):
             # perform backward Euler step
             tcur, ycur, solver, step_success = backward_euler_step(f, tcur, ycur,
                                                                    h, solver)
-            if (not step_success):
+            if not step_success:
                 print("backward_euler error in time step at t =", tcur)
-                return (t, y, False)
+                return t, y, False
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = ycur
+        y[iout, :] = ycur
 
     # return with "success" flag
-    return (t, y, True)
+    return t, y, True

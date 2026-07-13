@@ -3,7 +3,7 @@
 # Daniel R. Reynolds
 # Department of Mathematics
 # Southern Methodist University
-from implicit_solver import ImplicitSolver
+
 
 def implicit_lmm_step(f, yarr, farr, t, h, alpha, beta, sol):
     """
@@ -16,24 +16,24 @@ def implicit_lmm_step(f, yarr, farr, t, h, alpha, beta, sol):
     # create LMM residual and Jacobia solver for this step
     t += h
     data = (h*beta[1]/alpha[0])*farr[-1] - (alpha[1]/alpha[0])*yarr[-1]
-    for i in range(2,alpha.size):
+    for i in range(2, alpha.size):
         data += (h*beta[i]/alpha[0])*farr[-i] - (alpha[i]/alpha[0])*yarr[-i]
 
     # create implicit residual and Jacobian solver for this step
-    F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(t,ynew)
+    F = lambda ynew: ynew - data - (h*beta[0]/alpha[0])*f(t, ynew)
     sol.setup_linear_solver(t, -h*beta[0]/alpha[0])
 
     # perform implicit solve, and return on solver failure
     y, iters, success = sol.solve(F, yarr[-1])
-    if (not success):
-        return (t, yarr, farr, sol, False)
+    if not success:
+        return t, yarr, farr, sol, False
 
     # add current solution and RHS to queue, and remove oldest solution and RHS
     yarr.pop(0)
     yarr.append(y)
     farr.pop(0)
-    farr.append(f(t,y))
-    return (t, yarr, farr, sol, True)
+    farr.append(f(t, y))
+    return t, yarr, farr, sol, True
 
 
 def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
@@ -76,33 +76,33 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+        if abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h):
             raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h" % (tspan[n],tspan[n+1]))
 
     # verify that input LMM coefficients are valid
     k = alpha.size
-    if (abs(alpha[0]) == 0):
+    if abs(alpha[0]) == 0:
         raise ValueError("LMM coefficient must have nonzero alpha[0], ", alpha[0], " was input")
-    if (beta.size != k):
+    if beta.size != k:
         raise ValueError("LMM coefficient arrays must be the same length,", beta.size, " != ", k)
-    if (np.shape(y0)[0] < (k-1)):
+    if np.shape(y0)[0] < (k-1):
         raise ValueError("insufficient initial conditions provided, ", np.shape(y0)[0], " < ", alpha.size-1)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros((tspan.size,y0.shape[1]))
+    y = np.zeros((tspan.size, y0.shape[1]))
     t[0] = tspan[0]
-    y[0,:] = y0[-1,:]
+    y[0, :] = y0[-1, :]
 
     # initialize internal data
     fprev = []
     yprev = []
     for i in range(k-1):
-        yprev.append(y0[i,:])
-        fprev.append(f(tspan[0]-(k-2-i)*h, y0[i,:]))
+        yprev.append(y0[i, :])
+        fprev.append(f(tspan[0]-(k-2-i)*h, y0[i, :]))
 
     # loop over desired output times
-    for iout in range(1,tspan.size):
+    for iout in range(1, tspan.size):
 
         # determine how many internal steps are required
         N = int(round((tspan[iout]-tspan[iout-1])/h))
@@ -117,13 +117,13 @@ def implicit_lmm(f, tspan, y0, h, alpha, beta, solver):
             tcur, yprev, fprev, solver, step_success = implicit_lmm_step(f, yprev, fprev,
                                                                          tcur, h, alpha,
                                                                          beta, solver)
-            if (not step_success):
+            if not step_success:
                 print("implicit_lmm error in time step at t =", tcur)
-                return (t, y, False)
+                return t, y, False
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = yprev[-1]
+        y[iout, :] = yprev[-1]
 
     # return with "success" flag
-    return (t, y, True)
+    return t, y, True

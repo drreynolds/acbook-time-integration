@@ -6,8 +6,6 @@
 # Daniel R. Reynolds
 # Department of Mathematics
 # Southern Methodist University
-
-import numpy as np
 import time
 from scipy.integrate import solve_ivp
 import numpy.linalg as la
@@ -16,27 +14,29 @@ from example2 import *
 # time resolution for checking solution accuracy
 N = 500
 
+
 # utility routine to run Oregonator test for a given atol array and print
 # solver statistics (always uses rtol = 1e-4)
-def runtest(reltol,abstol):
+def runtest(reltol, abstol):
     # run test with this abstol input
     tic = time.perf_counter()
-    ivpsol = solve_ivp(f, (t0,tf), y0, method='BDF', jac=J_dense,
-                       rtol=reltol, atol=abstol)
+    sol = solve_ivp(f, (t0, tf), y0, method='BDF', jac=J_dense,
+                    rtol=reltol, atol=abstol)
     toc = time.perf_counter()
     # generate reference solution at these same times
-    refsol = solve_ivp(f, (t0,tf), y0, method='BDF', jac=J_dense,
-                       t_eval=ivpsol.t, rtol=1e-8, atol=[1e-20, 1e-18, 1e-18])
-    if (not ivpsol.success):
+    refsol = solve_ivp(f, (t0, tf), y0, method='BDF', jac=J_dense,
+                       t_eval=sol.t, rtol=1e-8, atol=[1e-20, 1e-18, 1e-18])
+    if not sol.success:
         print("   %.0e | %.0e %.0e %.0e | solver failure"
               % (reltol, abstol[0], abstol[1], abstol[2]))
     else:
         print("   %.0e | %.0e %.0e %.0e | %5i | %7.4f | %.6f"
               % (reltol, abstol[0], abstol[1], abstol[2],
-                 np.size(ivpsol.t),
-                 la.norm(refsol.y-ivpsol.y, np.inf)/la.norm(refsol.y, np.inf)*100,
-                 toc-tic ))
-    return ivpsol
+                 np.size(sol.t),
+                 la.norm(refsol.y - sol.y, np.inf) / la.norm(refsol.y, np.inf)*100,
+                 toc-tic))
+    return sol
+
 
 # print header
 print("\nTolerance performance tests for ivp_sol on Oregonator problem:\n")
@@ -63,9 +63,9 @@ ivpsol = runtest(1e-4, [1e-13, 1e-10, 1e-10])
 print("  ========================================================\n")
 
 # output some solution statistics
-n1 = np.abs((ivpsol.y)[0,:])
-n2 = np.abs((ivpsol.y)[1,:])
-n3 = np.abs((ivpsol.y)[2,:])
+n1 = np.abs(ivpsol.y[0,:])
+n2 = np.abs(ivpsol.y[1,:])
+n3 = np.abs(ivpsol.y[2,:])
 print("\nSolution value statistics over time interval:")
 print("   n1:  |max| = %.2e,  |min| = %.2e,  |avg| = %.2e" %
       (np.max(n1), np.min(n1), np.sum(n1)/np.size(n1)))

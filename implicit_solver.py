@@ -39,13 +39,14 @@ class ImplicitSolver:
         self.rtol = rtol
         self.atol = atol
         self.Jfreq = 1
-        if (Jfreq > 0):
+        if Jfreq > 0:
             self.Jfreq = Jfreq
         # internal data
         self.linear_solver = 0
         self.total_iters = 0
         self.total_setups = 0
-        if ((solver_type != 'dense') and (solver_type != 'sparse') and (solver_type != 'gmres') and (solver_type != 'pgmres')):
+        if ((solver_type != 'dense') and (solver_type != 'sparse')
+                and (solver_type != 'gmres') and (solver_type != 'pgmres')):
             raise ValueError("Illegal solver_type input, must be one of dense/sparse/gmres/pgmres")
 
     def setup_linear_solver(self, t, gamma):
@@ -63,37 +64,37 @@ class ImplicitSolver:
         from scipy.sparse.linalg import gmres
         from scipy.sparse.linalg import factorized
 
-        if (self.solver_type == 'dense'):
-            def J(y,rtol,abstol):
-                Jac = np.eye(y.size) + gamma*self.f_y(t,y)
+        if self.solver_type == 'dense':
+            def J(y, rtol, abstol):
+                Jac = np.eye(y.size) + gamma*self.f_y(t, y)
                 try:
                     lu, piv = lu_factor(Jac)
                 except:
                     raise RuntimeError("Dense Jacobian factorization failure")
                 Jsolve = lambda b: lu_solve((lu, piv), b)
-                return LinearOperator((y.size,y.size), matvec=Jsolve)
-        elif (self.solver_type == 'sparse'):
-            def J(y,rtol,abstol):
-                Jac = identity(y.size) + gamma*self.f_y(t,y)
+                return LinearOperator((y.size, y.size), matvec=Jsolve)
+        elif self.solver_type == 'sparse':
+            def J(y, rtol, abstol):
+                Jac = identity(y.size) + gamma*self.f_y(t, y)
                 try:
                     Jfactored = factorized(Jac)
                 except:
                     raise RuntimeError("Sparse Jacobian factorization failure")
                 Jsolve = lambda b: Jfactored(b)
-                return LinearOperator((y.size,y.size), matvec=Jsolve)
-        elif (self.solver_type == 'gmres'):
-            def J(y,rtol,abstol):
-                Jv = lambda v: v + gamma*self.f_y(t,y,v)
-                J = LinearOperator((y.size,y.size), matvec=Jv)
-                Jsolve = lambda b: gmres(J, b, tol=rtol, atol=abstol)[0]
-                return LinearOperator((y.size,y.size), matvec=Jsolve)
-        elif (self.solver_type == 'pgmres'):
-            def J(y,rtol,abstol):
-                P = self.prec(t,y,gamma,rtol,abstol)
-                Jv = lambda v: v + gamma*self.f_y(t,y,v)
-                J = LinearOperator((y.size,y.size), matvec=Jv)
-                Jsolve = lambda b: gmres(J, b, tol=rtol, atol=abstol, M=P)[0]
-                return LinearOperator((y.size,y.size), matvec=Jsolve)
+                return LinearOperator((y.size, y.size), matvec=Jsolve)
+        elif self.solver_type == 'gmres':
+            def J(y, rtol, abstol):
+                Jv = lambda v: v + gamma*self.f_y(t, y, v)
+                J = LinearOperator((y.size, y.size), matvec=Jv)
+                Jsolve = lambda b: gmres(J, b, rtol=rtol, atol=abstol)[0]
+                return LinearOperator((y.size, y.size), matvec=Jsolve)
+        elif self.solver_type == 'pgmres':
+            def J(y, rtol, abstol):
+                P = self.prec(t, y, gamma, rtol, abstol)
+                Jv = lambda v: v + gamma*self.f_y(t, y, v)
+                J = LinearOperator((y.size, y.size), matvec=Jv)
+                Jsolve = lambda b: gmres(J, b, rtol=rtol, atol=abstol, M=P)[0]
+                return LinearOperator((y.size, y.size), matvec=Jsolve)
         self.linear_solver = J
 
     def solve(self, Ffcn, y0):
@@ -120,7 +121,7 @@ class ImplicitSolver:
         assert self.linear_solver != 0, "linear_solver has not been created"
 
         # set scalar-valued absolute tolerance for linear solver
-        if (np.isscalar(self.atol)):
+        if np.isscalar(self.atol):
             abstol = self.atol
         else:
             abstol = np.average(self.atol)
@@ -141,7 +142,7 @@ class ImplicitSolver:
         self.total_setups += 1
 
         # perform iteration
-        for its in range(1,self.maxiter+1):
+        for its in range(1, self.maxiter+1):
 
             # increment iteration counter
             iters += 1
@@ -154,20 +155,20 @@ class ImplicitSolver:
             y -= h
 
             # check for convergence
-            if (np.linalg.norm(h / (self.atol + self.rtol*np.abs(y)))/np.sqrt(n) < 1):
+            if np.linalg.norm(h / (self.atol + self.rtol*np.abs(y)))/np.sqrt(n) < 1:
                 success = True
-                return (y, iters, success)
+                return y, iters, success
 
             # update nonlinear residual
             F = Ffcn(y)
 
             # update Jacobian every "Jfreq" iterations
-            if (its % self.Jfreq == 0):
+            if its % self.Jfreq == 0:
                 Jsolver = self.linear_solver(y, self.rtol, abstol)
                 self.total_setups += 1
 
         # if we made it here, return with current solution (note that success is still False)
-        return (y, iters, success)
+        return y, iters, success
 
     def get_total_iters(self):
         """ Returns the total number of nonlinear solver iterations over the life of the solver """

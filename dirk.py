@@ -3,7 +3,7 @@
 # Daniel R. Reynolds
 # Department of Mathematics
 # Southern Methodist University
-from implicit_solver import ImplicitSolver
+
 
 def dirk_step(f, t, y, k, h, A, b, c, sol):
     """
@@ -21,26 +21,26 @@ def dirk_step(f, t, y, k, h, A, b, c, sol):
         # construct "data" for this stage solve
         data = np.copy(y)
         for j in range(i):
-            data += h*A[i,j]*k[j,:]
+            data += h*A[i, j]*k[j, :]
 
         # construct implicit residual and Jacobian solver for this stage
         tstage = t + h*c[i]
-        F = lambda zcur: zcur - data - h*A[i,i]*f(tstage,zcur)
-        sol.setup_linear_solver(tstage, -h*A[i,i])
+        F = lambda zcur: zcur - data - h*A[i, i]*f(tstage, zcur)
+        sol.setup_linear_solver(tstage, -h*A[i, i])
 
         # perform implicit solve, and return on solver failure
         z, iters, success = sol.solve(F, y)
-        if (not success):
-            return (t, y, k, sol, False)
+        if not success:
+            return t, y, k, sol, False
 
         # store RHS at this stage
-        k[i,:] = f(tstage, z)
+        k[i, :] = f(tstage, z)
 
     # update time step solution
     for i in range(b.size):
-        y += h*b[i]*k[i,:]
+        y += h*b[i]*k[i, :]
     t += h
-    return (t, y, k, sol, True)
+    return t, y, k, sol, True
 
 
 def dirk(f, tspan, ycur, h, A, b, c, solver):
@@ -77,30 +77,30 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+        if abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h):
             raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
 
     # verify that Butcher table has appropriate structure
-    if (np.linalg.norm(np.triu(A,1)) > 10*np.finfo(float).eps):
+    if np.linalg.norm(np.triu(A,1)) > 10*np.finfo(float).eps:
         raise ValueError("input Butcher table must be lower-triangular, A =", A)
-    if (np.shape(A)[0] != np.shape(A)[1]):
+    if np.shape(A)[0] != np.shape(A)[1]:
         raise ValueError("input Butcher table must be square, A =", A)
-    if (np.shape(A)[0] != b.size):
+    if np.shape(A)[0] != b.size:
         raise ValueError("incompatible Butcher table inputs, A =", A, ", b =", b)
-    if (b.size != c.size):
+    if b.size != c.size:
         raise ValueError("incompatible Butcher table inputs, b =", b, ", c =", c)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros((tspan.size,ycur.size))
+    y = np.zeros((tspan.size, ycur.size))
     t[0] = tspan[0]
-    y[0,:] = ycur
+    y[0, :] = ycur
 
     # initialize internal data
-    k = np.zeros((b.size,ycur.size))
+    k = np.zeros((b.size, ycur.size))
 
     # loop over desired output times
-    for iout in range(1,tspan.size):
+    for iout in range(1, tspan.size):
 
         # determine how many internal steps are required
         N = int(round((tspan[iout]-tspan[iout-1])/h))
@@ -114,13 +114,13 @@ def dirk(f, tspan, ycur, h, A, b, c, solver):
             # perform diagonally-implicit Runge--Kutta update
             tcur, ycur, k, solver, step_success = dirk_step(f, tcur, ycur, k,
                                                             h, A, b, c, solver)
-            if (not step_success):
+            if not step_success:
                 print("dirk error in time step at t =", tcur)
-                return (t, y, False)
+                return t, y, False
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = ycur
+        y[iout, :] = ycur
 
     # return with "success" flag
-    return (t, y, True)
+    return t, y, True

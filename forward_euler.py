@@ -12,9 +12,9 @@ def forward_euler_step(f, t, y, h):
     where the inputs (t,y) are overwritten by the updated versions.
     If success==True then the step succeeded; otherwise it failed.
     """
-    y += h*f(t,y)
+    y += h*f(t, y)
     t += h
-    return (t, y, True)
+    return t, y, True
 
 
 def forward_euler(f, tspan, ycur, h):
@@ -46,17 +46,17 @@ def forward_euler(f, tspan, ycur, h):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+        if abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h):
             raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h = %e" % (tspan[n],tspan[n+1],h))
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros((tspan.size,ycur.size))
+    y = np.zeros((tspan.size, ycur.size))
     t[0] = tspan[0]
-    y[0,:] = ycur
+    y[0, :] = ycur
 
     # loop over desired output times
-    for iout in range(1,tspan.size):
+    for iout in range(1, tspan.size):
 
         # determine how many internal steps are required
         N = int(round((tspan[iout]-tspan[iout-1])/h))
@@ -69,13 +69,13 @@ def forward_euler(f, tspan, ycur, h):
 
             # perform forward Euler update
             tcur, ycur, step_success = forward_euler_step(f, tcur, ycur, h)
-            if (not step_success):
+            if not step_success:
                 print("forward_euler error in time step at t =", tcur)
-                return (t, y, False)
+                return t, y, False
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = ycur
+        y[iout, :] = ycur
 
     # return with "success" flag
-    return (t, y, True)
+    return t, y, True

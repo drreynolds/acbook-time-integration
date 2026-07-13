@@ -44,13 +44,13 @@ def newton(Ffcn, Jfcn, x0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
     import numpy as np
 
     # set scalar-valued absolute tolerance for linear solver
-    if (np.isscalar(atol)):
+    if np.isscalar(atol):
         abstol = atol
     else:
         abstol = np.average(atol)
 
     # initialize output structure
-    sol = {'x': x0, 'iters' : 0, 'success' : False }
+    sol = {'x': x0, 'iters': 0, 'success': False}
 
     # store nonlinear system size
     n = x0.size
@@ -62,7 +62,7 @@ def newton(Ffcn, Jfcn, x0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
     Jsolver = Jfcn(sol['x'], rtol, abstol)
 
     # perform iteration
-    for its in range(1,maxiter+1):
+    for its in range(1, maxiter+1):
 
         # increment iteration counter
         sol['iters'] += 1
@@ -74,7 +74,7 @@ def newton(Ffcn, Jfcn, x0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
         sol['x'] = sol['x'] - h
 
         # check for convergence
-        if (np.linalg.norm(h / (atol + rtol*np.abs(sol['x'])))/np.sqrt(n) < 1):
+        if np.linalg.norm(h / (atol + rtol*np.abs(sol['x'])))/np.sqrt(n) < 1:
             sol['success'] = True
             return sol
 
@@ -82,7 +82,7 @@ def newton(Ffcn, Jfcn, x0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
         F = Ffcn(sol['x'])
 
         # update Jacobian every "Jfreq" iterations
-        if (its % Jfreq == 0):
+        if its % Jfreq == 0:
             Jsolver = Jfcn(sol['x'], rtol, abstol)
 
     # if we made it here, return with current solution (note that sol['success'] is still False)

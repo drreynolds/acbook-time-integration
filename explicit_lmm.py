@@ -13,7 +13,7 @@ def explicit_lmm_step(f, yarr, farr, t, h, alpha, beta):
     If success==True then the step succeeded; otherwise it failed.
     """
     y = (h*beta[1]/alpha[0])*farr[-1] - (alpha[1]/alpha[0])*yarr[-1]
-    for i in range(2,alpha.size):
+    for i in range(2, alpha.size):
         y += (h*beta[i]/alpha[0])*farr[-i] - (alpha[i]/alpha[0])*yarr[-i]
     t += h
 
@@ -22,7 +22,7 @@ def explicit_lmm_step(f, yarr, farr, t, h, alpha, beta):
     yarr.append(y)
     farr.pop(0)
     farr.append(f(t,y))
-    return (t, yarr, farr, True)
+    return t, yarr, farr, True
 
 
 def explicit_lmm(f, tspan, y0, h, alpha, beta):
@@ -63,36 +63,36 @@ def explicit_lmm(f, tspan, y0, h, alpha, beta):
     # verify that tspan values are separated by multiples of h
     for n in range(tspan.size-1):
         hn = tspan[n+1]-tspan[n]
-        if (abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h)):
+        if abs(round(hn/h) - (hn/h)) > 100*np.sqrt(np.finfo(h).eps)*abs(h):
             raise ValueError("input values in tspan (%e,%e) are not separated by a multiple of h"
-                             % (tspan[n],tspan[n+1]))
+                             % (tspan[n], tspan[n+1]))
 
     # verify that input LMM coefficients are valid
     k = alpha.size
-    if (abs(alpha[0]) == 0):
+    if abs(alpha[0]) == 0:
         raise ValueError("LMM coefficient must have nonzero alpha[0], ", alpha[0], " was input")
-    if (abs(beta[0]) > 10*np.finfo(float).eps):
+    if abs(beta[0]) > 10*np.finfo(float).eps:
         raise ValueError("only explicit LMMs supported, beta[0] =", beta[0], " (should be 0)")
-    if (beta.size != k):
+    if beta.size != k:
         raise ValueError("LMM coefficient arrays must be the same length,", beta.size, " != ", k)
-    if (np.shape(y0)[0] < (k-1)):
+    if np.shape(y0)[0] < (k-1):
         raise ValueError("insufficient initial conditions provided, ", np.shape(y0)[0], " < ", alpha.size-1)
 
     # initialize outputs, and set first entry corresponding to initial condition
     t = np.zeros(tspan.size)
-    y = np.zeros((tspan.size,y0.shape[1]))
+    y = np.zeros((tspan.size, y0.shape[1]))
     t[0] = tspan[0]
-    y[0,:] = y0[-1,:]
+    y[0, :] = y0[-1, :]
 
     # initialize internal data
     fprev = []
     yprev = []
     for i in range(k-1):
-        yprev.append(y0[i,:])
-        fprev.append(f(tspan[0]-(k-2-i)*h, y0[i,:]))
+        yprev.append(y0[i, :])
+        fprev.append(f(tspan[0]-(k-2-i)*h, y0[i, :]))
 
     # loop over desired output times
-    for iout in range(1,tspan.size):
+    for iout in range(1, tspan.size):
 
         # determine how many internal steps are required
         N = int(round((tspan[iout]-tspan[iout-1])/h))
@@ -106,13 +106,13 @@ def explicit_lmm(f, tspan, y0, h, alpha, beta):
             # perform LMM update
             tcur, yprev, fprev, step_success = explicit_lmm_step(f, yprev, fprev,
                                                                  tcur, h, alpha, beta)
-            if (not step_success):
+            if not step_success:
                 print("explicit_lmm error in time step at t =", tcur)
-                return (t, y, False)
+                return t, y, False
 
         # store current results in output arrays
         t[iout] = tcur
-        y[iout,:] = yprev[-1]
+        y[iout, :] = yprev[-1]
 
     # return with "success" flag
-    return (t, y, True)
+    return t, y, True

@@ -12,16 +12,15 @@ import matplotlib.pyplot as plt
 from forward_euler import *
 from erk import *
 from explicit_lmm import *
-from scipy.integrate import solve_ivp
 import example1 as ex1
 
 print("Brusselator IVP Tests")
 
 # generate solution plot
 tspan,yref = ex1.reference_solution(501)
-fig = plt.figure(figsize=(8,6), dpi=100)
-plt.plot(tspan, yref[0,:], label='n(X)')
-plt.plot(tspan, yref[1,:], label='n(Y)')
+fig = plt.figure(figsize=(8, 6), dpi=100)
+plt.plot(tspan, yref[0, :], label='n(X)')
+plt.plot(tspan, yref[1, :], label='n(Y)')
 plt.xlabel('time')
 plt.legend()
 plt.savefig('Brusselator_solution.pdf')
@@ -42,24 +41,24 @@ test_erk = True
 test_explicit_lmm = True
 
 # forward Euler tests
-if (test_fwd_euler):
+if test_fwd_euler:
     print("forward Euler tests:")
     errs = np.ones(hvals.size)
     for ih in range(hvals.size):
         y0 = np.copy(ex1.y0)
         t, y, success = forward_euler(ex1.f, tspan, y0, hvals[ih])
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
                       (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
 # ERK tests
-if (test_erk):
+if test_erk:
     print("ERK-2 tests:")
     kappa = 0.5
     A = np.array([[0, 0], [0.5/kappa, 0]], dtype=float)
@@ -69,11 +68,11 @@ if (test_erk):
     for ih in range(hvals.size):
         y0 = np.copy(ex1.y0)
         t, y, success = erk(ex1.f, tspan, y0, hvals[ih], A, b, c)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
@@ -88,11 +87,11 @@ if (test_erk):
     for ih in range(hvals.size):
         y0 = np.copy(ex1.y0)
         t, y, success = erk(ex1.f, tspan, y0, hvals[ih], A, b, c)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
@@ -106,18 +105,18 @@ if (test_erk):
     for ih in range(hvals.size):
         y0 = np.copy(ex1.y0)
         t, y, success = erk(ex1.f, tspan, y0, hvals[ih], A, b, c)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
                       (hvals[ih], errs[ih], np.log(errs[ih]/errs[ih-1])/np.log(hvals[ih]/hvals[ih-1])))
 
 # Explicit LMM tests
-if (test_explicit_lmm):
+if test_explicit_lmm:
     print("AB-1 tests:")
     alphas = np.array([1, -1], dtype=float)
     betas = np.array([0, 1], dtype=float)
@@ -125,11 +124,11 @@ if (test_explicit_lmm):
     for ih in range(hvals.size):
         y0 = np.array([ex1.y0])
         t, y, success = explicit_lmm(ex1.f, tspan, y0, hvals[ih], alphas, betas)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
@@ -142,11 +141,11 @@ if (test_explicit_lmm):
     for ih in range(hvals.size):
         y0 = np.array([ex1.y0, ex1.y0])
         t, y, success = explicit_lmm(ex1.f, tspan, y0, hvals[ih], alphas, betas)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
@@ -159,11 +158,11 @@ if (test_explicit_lmm):
     for ih in range(hvals.size):
         y0 = np.array([ex1.y0, ex1.y0, ex1.y0])
         t, y, success = explicit_lmm(ex1.f, tspan, y0, hvals[ih], alphas, betas)
-        if (not success):
+        if not success:
             print("  failure with h =", hvals[ih])
         else:
             errs[ih] = np.linalg.norm(y-np.transpose(yref),1)
-            if (ih == 0):
+            if ih == 0:
                 print("  h = %.12e,  error = %.12e" % (hvals[ih], errs[ih]))
             else:
                 print("  h = %.12e,  error = %.12e,  rate = %.3f" %
