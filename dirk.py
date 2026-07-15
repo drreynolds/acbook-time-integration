@@ -1,8 +1,8 @@
 # dirk.py
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 
 def dirk_step(f, t, y, k, h, A, b, c, sol):

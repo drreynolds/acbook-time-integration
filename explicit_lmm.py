@@ -1,8 +1,8 @@
 # explicit_lmm.py
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 def explicit_lmm_step(f, yarr, farr, t, h, alpha, beta):
     """

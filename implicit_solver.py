@@ -3,8 +3,8 @@
 # Module containing the ImplicitSolver class, to be used within implicit time stepping methods.
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 class ImplicitSolver:
     """

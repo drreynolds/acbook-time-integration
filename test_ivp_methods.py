@@ -23,8 +23,8 @@
 #
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 import numpy as np
 from implicit_solver import *

@@ -4,8 +4,8 @@
 # Oregonator test problem.
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 import time
 from scipy.integrate import solve_ivp
 import numpy.linalg as la

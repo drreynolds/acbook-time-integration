@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#
+# Daniel R. Reynolds
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 """
 Script to test newton implementations.
 """

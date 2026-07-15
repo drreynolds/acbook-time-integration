@@ -1,8 +1,8 @@
 # newton.py
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 def newton(Ffcn, Jfcn, x0, maxiter=10, rtol=1e-3, atol=0.0, Jfreq=1):
     """

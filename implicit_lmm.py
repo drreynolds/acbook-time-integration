@@ -1,8 +1,8 @@
 # implicit_lmm.py
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 
 def implicit_lmm_step(f, yarr, farr, t, h, alpha, beta, sol):

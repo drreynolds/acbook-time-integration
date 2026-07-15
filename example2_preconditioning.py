@@ -4,8 +4,8 @@
 # on the Oregonator example (using backward Euler time-stepping).
 #
 # Daniel R. Reynolds
-# Department of Mathematics
-# Southern Methodist University
+# Department of Mathematics & Statistics
+# University of Maryland Baltimore County
 
 import numpy as np
 from scipy.sparse.linalg import aslinearoperator
